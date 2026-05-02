@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.cache/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+.idea/
+.vscode/
+.DS_Store
