@@ -1,0 +1,114 @@
+{
+  "nav": {
+    "home": "Bosh sahifa",
+    "catalog": "Katalog",
+    "favorites": "Sevimlilar",
+    "cart": "Savatcha",
+    "profile": "Kabinet",
+    "search": "Mahsulot qidirish...",
+    "categories": "Kategoriyalar",
+    "allCategories": "Barcha toifalar"
+  },
+  "hero": {
+    "title": "Smart - sizning ishonchli do'koningiz",
+    "subtitle": "Maishiy texnika va smart qurilmalar. Muddatli to'lov 0% foiz, 12 oygacha",
+    "cta": "Xaridni boshlash",
+    "secondary": "Aksiyalar"
+  },
+  "products": {
+    "popular": "Ommabop mahsulotlar",
+    "new": "Yangi mahsulotlar",
+    "discount": "Chegirmalar",
+    "addToCart": "Savatchaga",
+    "inCart": "Savatchada",
+    "outOfStock": "Tugagan",
+    "perMonth": "/ oyiga",
+    "months": "oy",
+    "credit": "Muddatli to'lov",
+    "notFound": "Mahsulot topilmadi",
+    "notFoundDesc": "Boshqa kategoriya yoki qidiruv so'zini sinab ko'ring",
+    "details": "Batafsil",
+    "stock": "ta mavjud",
+    "buy": "Sotib olish",
+    "all": "Barcha mahsulotlar",
+    "items": "ta mahsulot"
+  },
+  "cart": {
+    "title": "Savatcha",
+    "empty": "Savatcha bo'sh",
+    "emptyDesc": "Katalogdan mahsulot tanlang",
+    "goShopping": "Xaridga o'tish",
+    "delivery": "Yetkazib berish",
+    "pickup": "O'zi olib ketish",
+    "pickupDesc": "Bepul",
+    "courier": "Kuryer",
+    "courierDesc": "25 000 so'm",
+    "payment": "To'lov usuli",
+    "card": "Karta orqali",
+    "cardDesc": "Click, Payme, Uzcard, HUMO",
+    "cash": "Naqd",
+    "cashDesc": "Olish vaqtida",
+    "products": "Mahsulotlar",
+    "deliveryFee": "Yetkazib berish",
+    "free": "Bepul",
+    "total": "Jami",
+    "checkout": "Buyurtma berish",
+    "remove": "O'chirish",
+    "quantity": "Miqdori"
+  },
+  "checkout": {
+    "title": "Buyurtmani rasmiylashtirish",
+    "name": "Ism familiya",
+    "phone": "Telefon raqam",
+    "address": "Manzil",
+    "comment": "Izoh (ixtiyoriy)",
+    "confirm": "Tasdiqlash",
+    "success": "Buyurtma qabul qilindi!",
+    "successDesc": "Tez orada operator siz bilan bog'lanadi"
+  },
+  "favorites": {
+    "title": "Sevimli mahsulotlar",
+    "empty": "Sevimlilar ro'yxati bo'sh",
+    "emptyDesc": "Yoqqan mahsulotlarni bu yerga qo'shing"
+  },
+  "auth": {
+    "login": "Kirish",
+    "phone": "Telefon raqamingizni kiriting",
+    "code": "SMS kod",
+    "sendCode": "Kod yuborish",
+    "verify": "Tasdiqlash",
+    "phoneHint": "+998 90 123 45 67"
+  },
+  "footer": {
+    "about": "Smart haqida",
+    "aboutText": "Smart - O'zbekistondagi yetakchi maishiy texnika do'koni. Sifatli mahsulotlar va qulay muddatli to'lov.",
+    "contacts": "Aloqa",
+    "address": "Manzil",
+    "addressValue": "Qarshi sh., I.Karimov ko'chasi 276-uy",
+    "phone": "Telefon",
+    "workHours": "Ish vaqti",
+    "workHoursValue": "Har kuni 09:00 - 21:00",
+    "links": "Bo'limlar",
+    "rights": "Barcha huquqlar himoyalangan",
+    "social": "Bizni kuzating",
+    "categories": "Kategoriyalar"
+  },
+  "common": {
+    "loading": "Yuklanmoqda...",
+    "back": "Orqaga",
+    "search": "Qidirish",
+    "filter": "Filtr",
+    "sort": "Saralash",
+    "language": "Til",
+    "currency": "so'm",
+    "showAll": "Barchasini ko'rish",
+    "subcategories": "Subkategoriyalar",
+    "of": "dan"
+  },
+  "sort": {
+    "popular": "Ommabop",
+    "priceAsc": "Arzon avval",
+    "priceDesc": "Qimmat avval",
+    "rating": "Reyting bo'yicha"
+  }
+}

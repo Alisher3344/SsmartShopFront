@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSMART Punkt Admin</title>
+    <link rel="icon" href="data:," />
+    <script>
+      // 5173 dan kelgan service worker leak'ini olib tashlaymiz
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((r) => r.unregister());
+        });
+        if (window.caches) {
+          caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
