@@ -312,17 +312,20 @@ export default function Header() {
 
             {/* Quick links */}
             <div className="grid grid-cols-2 gap-2 mb-4">
-              <Link to="/" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium">
-                🏠 {t('nav.home')}
+              <Link to="/" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/House/3D/house_3d.png" alt="" className="w-5 h-5 object-contain" />
+                <span>{t('nav.home')}</span>
               </Link>
-              <Link to="/catalog" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium">
-                📦 {t('nav.catalog')}
+              <Link to="/catalog" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Package/3D/package_3d.png" alt="" className="w-5 h-5 object-contain" />
+                <span>{t('nav.catalog')}</span>
               </Link>
-              <Link to="/profile" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium">
-                👤 {t('nav.profile')}
+              <Link to="/profile" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
+                <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Bust%20in%20silhouette/3D/bust_in_silhouette_3d.png" alt="" className="w-5 h-5 object-contain" />
+                <span>{t('nav.profile')}</span>
               </Link>
               <Link to="/cart" className="px-3 py-2.5 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium flex items-center gap-1.5">
-                <MIcon name="shopping_cart" size={16} />
+                <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Shopping%20cart/3D/shopping_cart_3d.png" alt="" className="w-5 h-5 object-contain" />
                 <span>{t('nav.cart')}</span>
                 {cartCount > 0 && (
                   <span className="ml-auto bg-primary-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
