@@ -250,7 +250,7 @@ export default function Header() {
               to={`/catalog?category=${cat.id}`}
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
-              <span className="mr-1">{cat.icon}</span>
+              <img src={cat.icon} alt="" className="inline-block w-5 h-5 object-contain mr-1 align-middle" />
               {cat.name[lang]}
             </Link>
           ))}
@@ -271,7 +271,7 @@ export default function Header() {
                     to={`/catalog?category=${cat.id}`}
                     className="flex items-center gap-2 font-semibold text-gray-900 hover:text-primary-600 mb-2"
                   >
-                    <span className="text-xl">{cat.icon}</span>
+                    <img src={cat.icon} alt="" className="w-7 h-7 object-contain" />
                     <span>{cat.name[lang]}</span>
                   </Link>
                   <ul className="space-y-1 ml-7">
@@ -342,7 +342,7 @@ export default function Header() {
                   <details key={cat.id} className="group">
                     <summary className="flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 rounded-lg cursor-pointer list-none">
                       <span className="flex items-center gap-2 text-sm font-medium">
-                        <span className="text-lg">{cat.icon}</span>
+                        <img src={cat.icon} alt="" className="w-6 h-6 object-contain" />
                         {cat.name[lang]}
                       </span>
                       <MIcon name="expand_more" size={18} className="text-gray-400 group-open:rotate-180 transition-transform" />

@@ -147,7 +147,7 @@ export default function CatalogPage() {
                         activeCategory === cat.id ? 'bg-primary-50 text-primary-700 font-medium' : 'hover:bg-gray-50'
                       }`}
                     >
-                      <span>{cat.icon}</span>
+                      <img src={cat.icon} alt="" className="w-5 h-5 object-contain" />
                       <span className="flex-1 truncate">{cat.name[lang]}</span>
                     </button>
                     {/* Subcategories - faqat aktiv kategoriya uchun */}
@@ -206,7 +206,7 @@ export default function CatalogPage() {
                     activeCategory === cat.id ? 'bg-primary-600 text-white' : 'bg-white border border-gray-200'
                   }`}
                 >
-                  <span>{cat.icon}</span>
+                  <img src={cat.icon} alt="" className="w-4 h-4 object-contain" />
                   {cat.name[lang]}
                 </button>
               ))}

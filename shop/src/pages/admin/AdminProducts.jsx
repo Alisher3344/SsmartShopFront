@@ -361,7 +361,7 @@ export default function AdminProducts() {
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
                   >
                     {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.icon} {c.name.uz}</option>
+                      <option key={c.id} value={c.id}>{c.name.uz}</option>
                     ))}
                   </select>
                 </div>

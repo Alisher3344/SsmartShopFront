@@ -4,7 +4,7 @@
 export const categories = [
   {
     id: 'large-appliances',
-    icon: '🏠',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/House/3D/house_3d.png',
     name: { uz: 'Katta maishiy texnika', ru: 'Крупная бытовая техника' },
     subcategories: [
       { id: 'washing', name: { uz: 'Kir yuvish mashinalari', ru: 'Стиральные машины' } },
@@ -16,7 +16,7 @@ export const categories = [
   },
   {
     id: 'small-appliances',
-    icon: '⚡',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/High%20voltage/3D/high_voltage_3d.png',
     name: { uz: 'Kichik maishiy texnika', ru: 'Малая бытовая техника' },
     subcategories: [
       { id: 'kettles', name: { uz: 'Elektr choynaklar', ru: 'Электрочайники' } },
@@ -28,7 +28,7 @@ export const categories = [
   },
   {
     id: 'climate',
-    icon: '❄️',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Snowflake/3D/snowflake_3d.png',
     name: { uz: 'Iqlim texnikasi', ru: 'Климатическая техника' },
     subcategories: [
       { id: 'ac', name: { uz: 'Konditsionerlar', ru: 'Кондиционеры' } },
@@ -40,7 +40,7 @@ export const categories = [
   },
   {
     id: 'cleaning',
-    icon: '🧹',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Broom/3D/broom_3d.png',
     name: { uz: 'Tozalash texnikasi', ru: 'Техника для уборки' },
     subcategories: [
       { id: 'vacuums', name: { uz: 'Changyutgichlar', ru: 'Пылесосы' } },
@@ -51,7 +51,7 @@ export const categories = [
   },
   {
     id: 'electronics',
-    icon: '📺',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Television/3D/television_3d.png',
     name: { uz: 'Maishiy elektronika', ru: 'Бытовая электроника' },
     subcategories: [
       { id: 'tvs', name: { uz: 'Televizorlar', ru: 'Телевизоры' } },
@@ -62,7 +62,7 @@ export const categories = [
   },
   {
     id: 'clothes-care',
-    icon: '👕',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/T-shirt/3D/t-shirt_3d.png',
     name: { uz: 'Kiyim parvarishi', ru: 'Уход за одеждой' },
     subcategories: [
       { id: 'irons', name: { uz: 'Utyuglar', ru: 'Утюги' } },
@@ -73,7 +73,7 @@ export const categories = [
   },
   {
     id: 'kitchen',
-    icon: '🍳',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Cooking/3D/cooking_3d.png',
     name: { uz: 'Oshxona texnikasi', ru: 'Кухонная техника' },
     subcategories: [
       { id: 'multicookers', name: { uz: 'Multivarkalar', ru: 'Мультиварки' } },
@@ -84,7 +84,7 @@ export const categories = [
   },
   {
     id: 'smart',
-    icon: '💡',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Light%20bulb/3D/light_bulb_3d.png',
     name: { uz: 'Aqlli (Smart) texnika', ru: 'Умная техника' },
     subcategories: [
       { id: 'smart-devices', name: { uz: 'Smart qurilmalar', ru: 'Умные устройства' } },
@@ -95,7 +95,7 @@ export const categories = [
   },
   {
     id: 'accessories',
-    icon: '🔌',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Electric%20plug/3D/electric_plug_3d.png',
     name: { uz: 'Aksessuarlar va ehtiyot qismlar', ru: 'Аксессуары и запчасти' },
     subcategories: [
       { id: 'spare-parts', name: { uz: 'Zapchastlar', ru: 'Запчасти' } },
