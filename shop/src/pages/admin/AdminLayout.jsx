@@ -17,31 +17,31 @@ function AdminLayoutInner() {
       </div>
     );
   }
-  if (!user) return <Navigate to="/dashboard/login" replace />;
-  if (!isAdmin) return <Navigate to="/dashboard/login" replace />;
+  if (!user) return <Navigate to="/Tty0xssmart/login" replace />;
+  if (!isAdmin) return <Navigate to="/Tty0xssmart/login" replace />;
 
   const handleLogout = () => {
     logout();
-    navigate('/dashboard/login');
+    navigate('/Tty0xssmart/login');
   };
 
   const role = user.role;
   const navItems = [
     // Faqat superadmin
-    { to: '/dashboard', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
+    { to: '/Tty0xssmart', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
     // Mahsulotlar — sotuv admin (admin) va staff (magazin admin)
-    { to: '/dashboard/products', label: 'Mahsulotlar', icon: Package, roles: ['admin', 'staff'] },
-    { to: '/dashboard/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['admin', 'staff'] },
-    { to: '/dashboard/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
-    { to: '/dashboard/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['admin', 'staff'] },
+    { to: '/Tty0xssmart/products', label: 'Mahsulotlar', icon: Package, roles: ['admin', 'staff'] },
+    { to: '/Tty0xssmart/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['admin', 'staff'] },
+    { to: '/Tty0xssmart/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['admin', 'staff'] },
     // Faqat staff (magazin admin) — o'z magazinining statistikasi
-    { to: '/dashboard/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
+    { to: '/Tty0xssmart/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
     // Faqat superadmin
-    { to: '/dashboard/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
-    { to: '/dashboard/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
-    { to: '/dashboard/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
-    { to: '/dashboard/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
-    { to: '/dashboard/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
   ];
 
   const visibleNav = navItems.filter(item => item.roles.includes(role));

@@ -37,7 +37,7 @@ export default function AdminPickupPoints() {
 
   const [adminPoint, setAdminPoint] = useState(null);
 
-  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
 
   const openAdd = () => {
     setEditingId(null);
@@ -264,7 +264,7 @@ export default function AdminPickupPoints() {
                   <input
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+998987770727"
+                    placeholder="+998948080055"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
                   />
                 </div>

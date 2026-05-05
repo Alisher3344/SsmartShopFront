@@ -12,7 +12,7 @@ function AdminLoginInner() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!authLoading && user) return <Navigate to="/dashboard" replace />;
+  if (!authLoading && user) return <Navigate to="/Tty0xssmart" replace />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ function AdminLoginInner() {
         logout();
         setError("Bu hisob admin paneliga kirish huquqiga ega emas");
       } else {
-        navigate('/dashboard');
+        navigate('/Tty0xssmart');
       }
     } else {
       setError(result.error);

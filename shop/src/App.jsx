@@ -48,9 +48,9 @@ function App() {
           <ShopProvider>
             <AuthGateProvider>
             <Routes>
-              {/* Yashirin admin marshrutlar - /dashboard */}
-              <Route path="/dashboard/login" element={<AdminLoginPage />} />
-              <Route path="/dashboard" element={<AdminLayout />}>
+              {/* Yashirin admin marshrutlar - /Tty0xssmart */}
+              <Route path="/Tty0xssmart/login" element={<AdminLoginPage />} />
+              <Route path="/Tty0xssmart" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="banners" element={<AdminBanners />} />

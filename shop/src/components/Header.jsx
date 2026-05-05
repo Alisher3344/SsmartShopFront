@@ -106,9 +106,9 @@ export default function Header() {
               {t('footer.workHoursValue')}
             </span>
           </div>
-          <a href="tel:+998987770727" className="flex items-center gap-1 text-gray-700 hover:text-primary-600">
+          <a href="tel:+998948080055" className="flex items-center gap-1 text-gray-700 hover:text-primary-600">
             <MIcon name="call" size={14} />
-            +998 98 777 07 27
+            +998 94 808 00 55
           </a>
         </div>
       </div>

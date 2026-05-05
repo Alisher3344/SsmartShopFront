@@ -765,7 +765,7 @@ function PickupTab({ lang = 'uz' }) {
             <div className="font-semibold text-gray-900">{tr('mainOffice', lang)}</div>
             <div className="text-sm text-gray-600">{lang === 'ru' ? 'г. Карши, ул. И.Каримова 276' : "Qarshi sh., I.Karimov ko'chasi 276-uy"}</div>
             <div className="text-xs text-gray-500 mt-1">🕐 {lang === 'ru' ? 'Ежедневно' : 'Har kuni'} 09:00 - 21:00</div>
-            <div className="text-xs text-gray-500">📞 +998 98 777 07 27</div>
+            <div className="text-xs text-gray-500">📞 +998 94 808 00 55</div>
           </div>
         </div>
       </div>
@@ -779,7 +779,7 @@ function ContactTab({ lang = 'uz' }) {
       <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 hidden lg:block">{tr('contactTitle', lang)}</h1>
       <div className="space-y-3">
         <a
-          href="tel:+998987770727"
+          href="tel:+998948080055"
           className="card p-4 flex items-center gap-3 hover:bg-gray-50"
         >
           <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
@@ -787,7 +787,7 @@ function ContactTab({ lang = 'uz' }) {
           </div>
           <div>
             <div className="text-xs text-gray-500">{tr('phone', lang)}</div>
-            <div className="font-medium">+998 98 777 07 27</div>
+            <div className="font-medium">+998 94 808 00 55</div>
           </div>
         </a>
 

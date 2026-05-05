@@ -44,8 +44,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <MIcon name="call" size={18} className="text-primary-500 flex-shrink-0" />
-                <a href="tel:+998987770727" className="hover:text-white transition-colors">
-                  +998 98 777 07 27
+                <a href="tel:+998948080055" className="hover:text-white transition-colors">
+                  +998 94 808 00 55
                 </a>
               </li>
               <li className="flex items-center gap-2">

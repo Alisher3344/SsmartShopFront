@@ -3,7 +3,7 @@
 Senior darajadagi React + Vite + TailwindCSS bilan yaratilgan zamonaviy onlayn do'kon. Maishiy texnika va smart qurilmalar.
 
 **Manzil:** Qarshi sh., I.Karimov ko'chasi 276-uy
-**Telefon:** +998 98 777 07 27
+**Telefon:** +998 94 808 00 55
 
 ## 🚀 Loyihani ishga tushirish
 
@@ -159,7 +159,7 @@ location / {
 ## 📞 Kontaktlar
 
 - 📍 Qarshi sh., I.Karimov ko'chasi 276-uy
-- 📞 +998 98 777 07 27
+- 📞 +998 94 808 00 55
 - 🌐 ssmart.uz
 
 ## 📄 Litsenziya

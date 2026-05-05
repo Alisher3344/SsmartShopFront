@@ -28,7 +28,7 @@ export default function AdminBanners() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
 
   const openAdd = () => {
     setEditingId(null);

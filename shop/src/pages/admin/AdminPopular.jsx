@@ -14,7 +14,7 @@ export default function AdminPopular() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [busyId, setBusyId] = useState(null);
 
-  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
 
   const handleToggle = async (id) => {
     setBusyId(id);

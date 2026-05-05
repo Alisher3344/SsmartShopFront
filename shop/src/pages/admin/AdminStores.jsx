@@ -45,7 +45,7 @@ export default function AdminStores() {
   const getStaff = (storeId) =>
     staffs.find(s => (s.storeId ?? s.store_id) === storeId);
 
-  if (!isSuperAdmin) return <Navigate to="/dashboard" replace />;
+  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
 
   const openAdd = () => { setEditingId(null); setForm(EMPTY); setError(''); setShowForm(true); };
   const openEdit = (s) => {
@@ -271,7 +271,7 @@ export default function AdminStores() {
                 <input
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+998987770727"
+                  placeholder="+998948080055"
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
                 />
               </div>

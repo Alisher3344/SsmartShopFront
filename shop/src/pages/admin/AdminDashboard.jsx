@@ -8,7 +8,7 @@ export default function AdminDashboard() {
   const { products, banners, saleProducts, activeBanners } = useAdminData();
 
   // Faqat super admin Dashboard ko'radi — qolganlar (admin/staff) Mahsulotlarga
-  if (!isSuperAdmin) return <Navigate to="/dashboard/products" replace />;
+  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart/products" replace />;
 
   const lowStock = products.filter(p => p.stock < 5);
   const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
