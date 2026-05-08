@@ -102,11 +102,11 @@ export default function ProductPage() {
           )}
 
           <div className="card overflow-hidden flex-1">
-            <div className="aspect-square bg-gray-50 relative">
+            <div className="aspect-[3/4] bg-gray-50 relative">
               <img
                 src={resolveImage(activeImage || product.image)}
                 alt={product.name[lang]}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   e.target.src = `https://placehold.co/600x600/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
                 }}
