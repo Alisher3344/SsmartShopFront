@@ -55,6 +55,9 @@ export default function CatalogPage() {
   }, [activeSubcategory]);
 
   const currentCategory = activeCategory !== 'all' ? findCategoryById(activeCategory) : null;
+  const currentSubcategory = activeSubcategory && currentCategory
+    ? currentCategory.subcategories.find(s => s.id === activeSubcategory)
+    : null;
   const currentSubcategory = activeSubcategory ? findSubcategoryById(activeSubcategory) : null;
 
   // Filtrlash — faqat zaxirada bor mahsulotlar
@@ -158,11 +161,14 @@ export default function CatalogPage() {
                           <button
                             key={sub.id}
                             onClick={() => setActiveSubcategory(activeSubcategory === sub.id ? '' : sub.id)}
-                            className={`w-full text-left px-2 py-1 rounded-md text-xs transition-colors ${
+                            className={`w-full text-left px-2 py-1 rounded-md text-xs transition-colors flex items-center justify-between gap-2 ${
                               activeSubcategory === sub.id ? 'bg-primary-100 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
                             }`}
                           >
-                            {sub.name[lang]}
+                            <span className="truncate">{sub.name[lang]}</span>
+                            {sub.discount && (
+                              <span className="text-[10px] font-bold text-green-600 flex-shrink-0">−{sub.discount}</span>
+                            )}
                           </button>
                         ))}
                       </div>
@@ -220,17 +226,40 @@ export default function CatalogPage() {
                   <button
                     key={sub.id}
                     onClick={() => setActiveSubcategory(activeSubcategory === sub.id ? '' : sub.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors inline-flex items-center gap-1.5 ${
                       activeSubcategory === sub.id ? 'bg-primary-100 text-primary-700 border border-primary-300' : 'bg-gray-50 border border-gray-200 text-gray-700'
                     }`}
                   >
                     {sub.name[lang]}
-                    {activeSubcategory === sub.id && <X className="w-3 h-3 inline ml-1" />}
+                    {sub.discount && (
+                      <span className="text-[10px] font-bold text-green-600">−{sub.discount}</span>
+                    )}
+                    {activeSubcategory === sub.id && <X className="w-3 h-3" />}
                   </button>
                 ))}
               </div>
             )}
           </div>
+
+          {/* Subcategory description banner (B/U holati va h.k.) */}
+          {currentSubcategory?.description && (
+            <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+              <FluentEmoji name="warning" size={20} />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-amber-900 text-sm flex items-center gap-2 flex-wrap">
+                  {currentSubcategory.name[lang]}
+                  {currentSubcategory.discount && (
+                    <span className="text-[11px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
+                      −{currentSubcategory.discount}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-amber-800 mt-0.5">
+                  {currentSubcategory.description[lang]}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Sort */}
           <div className="flex items-center justify-between mb-4">

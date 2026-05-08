@@ -104,6 +104,49 @@ export const categories = [
       { id: 'adapters', name: { uz: 'Adapterlar', ru: 'Адаптеры' } },
     ],
   },
+  {
+    id: 'used',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Money%20bag/3D/money_bag_3d.png',
+    name: { uz: 'Foydalanilgan (B/U)', ru: 'Б/У (бывшие в употреблении)' },
+    subcategories: [
+      {
+        id: 'used-ideal',
+        name: { uz: 'Ideal / A+ holati', ru: 'Идеальное / A+' },
+        description: {
+          uz: "Deyarli yangidek, chizilmagan, ekran va korpus toza.",
+          ru: 'Почти как новый, без царапин, экран и корпус чистые.',
+        },
+        discount: '15-25%',
+      },
+      {
+        id: 'used-good',
+        name: { uz: 'Yaxshi holat (A)', ru: 'Хорошее (A)' },
+        description: {
+          uz: "Kichik chiziqlar bor, lekin ekran butun, hamma narsa ishlaydi.",
+          ru: 'Мелкие царапины, но экран целый, всё работает.',
+        },
+        discount: '30-40%',
+      },
+      {
+        id: 'used-fair',
+        name: { uz: "O'rtacha holat (B)", ru: 'Среднее (B)' },
+        description: {
+          uz: "Ko'rinarli chiziqlar, burchaklarida zarba izlari bo'lishi mumkin.",
+          ru: 'Заметные царапины, могут быть следы ударов на углах.',
+        },
+        discount: '40-50%',
+      },
+      {
+        id: 'used-poor',
+        name: { uz: 'Yomon holat (C)', ru: 'Плохое (C)' },
+        description: {
+          uz: "Sezilarli shikastlar, ekran almashtirilgan bo'lishi mumkin. Ancha arzon, lekin xavfli.",
+          ru: 'Заметные повреждения, экран мог быть заменён. Намного дешевле, но риск выше.',
+        },
+        discount: '50%+',
+      },
+    ],
+  },
 ];
 
 // ===== YORDAMCHI FUNKSIYALAR =====
