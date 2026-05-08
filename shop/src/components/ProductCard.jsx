@@ -30,8 +30,8 @@ export default function ProductCard({ product }) {
   return (
     <div className="card group overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full">
       {/* Image */}
-      <div className="relative aspect-square bg-gray-50 overflow-hidden flex-shrink-0">
-        <Link to={`/product/${product.id}`}>
+      <div className="relative aspect-[3/4] bg-gray-50 overflow-hidden flex-shrink-0">
+        <Link to={`/product/${product.id}`} className="block w-full h-full">
           <img
             src={product.image}
             alt={product.name[lang]}
