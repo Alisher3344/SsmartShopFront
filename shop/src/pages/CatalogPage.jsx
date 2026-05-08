@@ -55,9 +55,6 @@ export default function CatalogPage() {
   }, [activeSubcategory]);
 
   const currentCategory = activeCategory !== 'all' ? findCategoryById(activeCategory) : null;
-  const currentSubcategory = activeSubcategory && currentCategory
-    ? currentCategory.subcategories.find(s => s.id === activeSubcategory)
-    : null;
   const currentSubcategory = activeSubcategory ? findSubcategoryById(activeSubcategory) : null;
 
   // Filtrlash — faqat zaxirada bor mahsulotlar
