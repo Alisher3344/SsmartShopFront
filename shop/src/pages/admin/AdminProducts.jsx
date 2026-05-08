@@ -15,6 +15,7 @@ const EMPTY_PRODUCT = {
   oldPrice: '',
   category: 'large-appliances',
   subcategory: '',
+  conditionNote: '',
   image: '',
   images: [],
   stock: '',
@@ -65,6 +66,7 @@ export default function AdminProducts() {
       images: product.images?.length ? product.images : (product.image ? [product.image] : []),
       badges: product.badges || [],
       isPopular: product.isPopular || false,
+      conditionNote: product.conditionNote || '',
       storeId: product.storeId ?? product.store_id ?? null,
       store_id: product.storeId ?? product.store_id ?? null,
     });
@@ -88,6 +90,7 @@ export default function AdminProducts() {
       description: form.description,
       category: form.category,
       subcategory: form.subcategory || null,
+      conditionNote: form.conditionNote?.trim() || null,
       image: allImages[0] || form.image,
       images: allImages,
       badges: form.badges || [],
@@ -382,6 +385,23 @@ export default function AdminProducts() {
                   </select>
                 </div>
               </div>
+
+              {/* Condition note — faqat B/U kategoriyasi uchun */}
+              {form.category === 'used' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Holat tasnifi <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
+                  </label>
+                  <textarea
+                    value={form.conditionNote || ''}
+                    onChange={(e) => setForm({ ...form, conditionNote: e.target.value })}
+                    placeholder="Masalan: Ekranda kichik chiziq bor, lekin ishlashga ta'sir qilmaydi. Akkumulyator 85%."
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-y"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Mahsulot sahifasida holat haqida qo'shimcha izoh sifatida ko'rinadi.</p>
+                </div>
+              )}
 
               {/* Price + OldPrice */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
