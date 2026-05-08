@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useShop } from '../context/ShopContext';
 import { useAuthGate } from '../context/AuthGateContext';
-import { formatPrice, calculateMonthly } from '../data/products';
+import { formatPrice, calculateMonthly, findSubcategoryById } from '../data/products';
 import { getBadgeById } from '../data/badges';
+import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import MIcon from './MIcon';
 import FluentEmoji from './FluentEmoji';
 
@@ -28,6 +29,11 @@ export default function ProductCard({ product }) {
     .map(id => getBadgeById(id))
     .filter(Boolean);
 
+  // B/U mahsulot uchun sinf harfi (A+/A/B/C)
+  const usedGrade = product.category === 'used' && product.subcategory
+    ? USED_GRADE_STYLES[product.subcategory]
+    : null;
+
   return (
     <div className="card group overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full">
       {/* Image */}
@@ -44,12 +50,19 @@ export default function ProductCard({ product }) {
           />
         </Link>
 
-        {/* Chegirma — chap yuqori burchakda */}
-        {discount > 0 && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-md z-10">
-            −{discount}%
-          </div>
-        )}
+        {/* Chap yuqori — sinf harfi (B/U) va/yoki chegirma */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+          {usedGrade && (
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs tracking-tight shadow-md ${usedGrade.iconBg}`}>
+              {usedGrade.letter}
+            </div>
+          )}
+          {discount > 0 && (
+            <div className="bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-md text-center">
+              −{discount}%
+            </div>
+          )}
+        </div>
 
         {/* Yorliqlar — rasm PASTIDA, yonma-yon bir qatorda */}
         {productBadges.length > 0 && (
