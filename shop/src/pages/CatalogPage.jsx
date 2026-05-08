@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, ChevronRight, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FluentEmoji from '../components/FluentEmoji';
 import { categories, findCategoryById, findSubcategoryById } from '../data/products';
+import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import { useAdminData } from '../context/AdminDataContext';
 
 export default function CatalogPage() {
@@ -239,24 +240,29 @@ export default function CatalogPage() {
           </div>
 
           {/* Subcategory description banner (B/U holati va h.k.) */}
-          {currentSubcategory?.description && (
-            <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2.5">
-              <FluentEmoji name="warning" size={20} />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-amber-900 text-sm flex items-center gap-2 flex-wrap">
-                  {currentSubcategory.name[lang]}
-                  {currentSubcategory.discount && (
-                    <span className="text-[11px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
-                      −{currentSubcategory.discount}
-                    </span>
-                  )}
+          {currentSubcategory?.description && (() => {
+            const s = USED_GRADE_STYLES[currentSubcategory.id];
+            return (
+              <div className={`mb-4 p-3 rounded-lg border flex items-start gap-2.5 ${s?.container || 'border-gray-200 bg-gray-50'}`}>
+                <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${s?.iconBg || 'bg-gray-500 text-white'}`}>
+                  {s?.letter || '?'}
                 </div>
-                <div className="text-xs text-amber-800 mt-0.5">
-                  {currentSubcategory.description[lang]}
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold text-sm flex items-center gap-2 flex-wrap ${s?.title || 'text-gray-900'}`}>
+                    {currentSubcategory.name[lang]}
+                    {currentSubcategory.discount && (
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${s?.discount || 'text-gray-700 bg-gray-100'}`}>
+                        −{currentSubcategory.discount}
+                      </span>
+                    )}
+                  </div>
+                  <div className={`text-xs mt-0.5 ${s?.body || 'text-gray-700'}`}>
+                    {currentSubcategory.description[lang]}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Sort */}
           <div className="flex items-center justify-between mb-4">

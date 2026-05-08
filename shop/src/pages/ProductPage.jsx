@@ -7,7 +7,7 @@ import { useAuthGate } from '../context/AuthGateContext';
 import { formatPrice, calculateMonthly, findSubcategoryById } from '../data/products';
 import { useAdminData } from '../context/AdminDataContext';
 import { reviewsApi, resolveImage } from '../api/client';
-import FluentEmoji from '../components/FluentEmoji';
+import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -67,6 +67,7 @@ export default function ProductPage() {
   const isUsed = product.category === 'used';
   const usedSub = isUsed && product.subcategory ? findSubcategoryById(product.subcategory) : null;
   const conditionNote = product.conditionNote;
+  const usedStyle = usedSub ? USED_GRADE_STYLES[usedSub.id] : null;
 
   return (
     <div className="container-custom py-6 animate-fade-in">
@@ -153,32 +154,34 @@ export default function ProductPage() {
             {product.description[lang]}
           </p>
 
-          {/* B/U holat banner — katta, ko'rinarli */}
+          {/* B/U holat banner — subkategoriyaga qarab rang va harf */}
           {isUsed && (usedSub || conditionNote) && (
-            <div className="mb-6 rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-5">
-              <div className="flex items-start gap-3">
-                <FluentEmoji name="warning" size={32} />
+            <div className={`mb-6 rounded-xl border-2 p-5 ${usedStyle?.container || 'border-gray-300 bg-gray-50'}`}>
+              <div className="flex items-start gap-4">
+                <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center font-black text-xl tracking-tight ${usedStyle?.iconBg || 'bg-gray-500 text-white ring-4 ring-gray-100'}`}>
+                  {usedStyle?.letter || '?'}
+                </div>
                 <div className="flex-1 min-w-0">
                   {usedSub && (
                     <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <span className="text-lg font-bold text-amber-900">
+                      <span className={`text-lg font-bold ${usedStyle?.title || 'text-gray-900'}`}>
                         {usedSub.name[lang]}
                       </span>
                       {usedSub.discount && (
-                        <span className="text-sm font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-md">
+                        <span className={`text-sm font-bold px-2 py-0.5 rounded-md ${usedStyle?.discount || 'text-gray-700 bg-gray-100'}`}>
                           −{usedSub.discount}
                         </span>
                       )}
                     </div>
                   )}
                   {usedSub?.description?.[lang] && (
-                    <p className="text-sm text-amber-900 mb-2">
+                    <p className={`text-sm mb-2 ${usedStyle?.body || 'text-gray-700'}`}>
                       {usedSub.description[lang]}
                     </p>
                   )}
                   {conditionNote && (
-                    <div className="mt-3 pt-3 border-t border-amber-300/60">
-                      <div className="text-xs uppercase tracking-wider font-bold text-amber-700 mb-1">
+                    <div className={`mt-3 pt-3 border-t ${usedStyle?.divider || 'border-gray-300/60'}`}>
+                      <div className={`text-xs uppercase tracking-wider font-bold mb-1 ${usedStyle?.noteLabel || 'text-gray-700'}`}>
                         Holat tasnifi
                       </div>
                       <p className="text-sm text-gray-800 whitespace-pre-wrap">
