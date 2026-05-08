@@ -4,6 +4,7 @@ import { Package, TrendingUp, ShoppingBag, Wallet, BarChart3, RefreshCw } from '
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
 import { ordersApi, resolveImage } from '../../api/client';
+import FluentEmoji from '../../components/FluentEmoji';
 
 function formatPrice(n) {
   return new Intl.NumberFormat('uz-UZ').format(n || 0);
@@ -250,7 +251,7 @@ export default function AdminStaffStats() {
       {lowStock.length > 0 && (
         <div className="card p-5 border-l-4 border-amber-500">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">⚠️</span>
+            <FluentEmoji name="warning" size={22} />
             <h3 className="font-bold text-gray-900">Kam qolgan mahsulotlar ({lowStock.length})</h3>
           </div>
           <p className="text-xs text-gray-500 mb-3">5 dan kam qolganlar — to'ldirish kerak</p>

@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, X, Save, MapPin, Eye, EyeOff, UserCog, KeyRound, 
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
 import { pickupPointsApi } from '../../api/client';
+import FluentEmoji from '../../components/FluentEmoji';
 
 const EMPTY_POINT = {
   name: { uz: '', ru: '' },
@@ -154,10 +155,10 @@ export default function AdminPickupPoints() {
               </div>
             </div>
 
-            <div className="text-sm text-gray-700 mb-1">📍 {point.address?.uz}</div>
-            {point.phone && <div className="text-xs text-gray-600 mb-1">📞 {point.phone}</div>}
+            <div className="text-sm text-gray-700 mb-1 flex items-center gap-1.5"><FluentEmoji name="pin" size={14} /> {point.address?.uz}</div>
+            {point.phone && <div className="text-xs text-gray-600 mb-1 flex items-center gap-1.5"><FluentEmoji name="phone" size={12} /> {point.phone}</div>}
             {(point.workHours || point.work_hours) && (
-              <div className="text-xs text-gray-600 mb-3">🕐 {point.workHours || point.work_hours}</div>
+              <div className="text-xs text-gray-600 mb-3 flex items-center gap-1.5"><FluentEmoji name="clock" size={12} /> {point.workHours || point.work_hours}</div>
             )}
 
             <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
@@ -408,8 +409,8 @@ function PickupAdminsModal({ point, onClose }) {
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold truncate">{admin.full_name || '—'}</div>
                         <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
-                          <span>👤 {admin.username}</span>
-                          {admin.phone && <span>📞 {admin.phone}</span>}
+                          <span className="flex items-center gap-1"><FluentEmoji name="user" size={12} /> {admin.username}</span>
+                          {admin.phone && <span className="flex items-center gap-1"><FluentEmoji name="phone" size={12} /> {admin.phone}</span>}
                         </div>
                       </div>
                       <button

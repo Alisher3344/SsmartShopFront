@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { ordersApi, resolveImage } from '../../api/client';
+import FluentEmoji from '../../components/FluentEmoji';
 
 const STATUS_TABS = [
   { id: 'confirmed', label: 'Tasdiqlangan (Punktga jo\'natish)', color: 'blue' },
@@ -201,7 +202,7 @@ export default function AdminOrders() {
                     </div>
                   )}
                   {order.deliveryType === 'courier' && (
-                    <div className="text-xs text-gray-600">📦 {order.deliveryAddress}</div>
+                    <div className="text-xs text-gray-600 flex items-center gap-1.5"><FluentEmoji name="package" size={12} /> {order.deliveryAddress}</div>
                   )}
                 </div>
 
@@ -226,8 +227,8 @@ export default function AdminOrders() {
                 </div>
 
                 {order.comment && (
-                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mb-3">
-                    💬 {order.comment}
+                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded mb-3 flex items-start gap-1.5">
+                    <FluentEmoji name="speech" size={12} /> {order.comment}
                   </div>
                 )}
 
@@ -240,8 +241,8 @@ export default function AdminOrders() {
 
                 {order.status === 'confirmed' && order.transitCode && (
                   <div className="mt-3 p-3 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
-                    <div className="text-xs text-blue-700 mb-1 font-medium">
-                      📦 Mahsulot kodi (yorliq) — punktga jo'natish uchun:
+                    <div className="text-xs text-blue-700 mb-1 font-medium flex items-center gap-1.5">
+                      <FluentEmoji name="package" size={12} /> Mahsulot kodi (yorliq) — punktga jo'natish uchun:
                     </div>
                     <div className="font-mono text-2xl font-bold text-blue-900 tracking-[0.3em] text-center py-1">
                       {order.transitCode}

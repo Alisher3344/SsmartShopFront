@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { salesAdminsApi } from "../../api/client";
+import FluentEmoji from "../../components/FluentEmoji";
 
 const formatPhone = (raw) => {
   const digits = (raw || "").replace(/\D/g, "").replace(/^998/, "").slice(0, 9);
@@ -152,12 +153,12 @@ export default function AdminSalesAdmins() {
                   <div className="font-semibold truncate">
                     {admin.full_name || "—"}
                   </div>
-                  <div className="text-xs text-gray-600 truncate">
-                    👤 {admin.username}
+                  <div className="text-xs text-gray-600 truncate flex items-center gap-1">
+                    <FluentEmoji name="user" size={12} /> {admin.username}
                   </div>
                   {admin.phone && (
-                    <div className="text-xs text-gray-600 truncate">
-                      📞 {admin.phone}
+                    <div className="text-xs text-gray-600 truncate flex items-center gap-1">
+                      <FluentEmoji name="phone" size={12} /> {admin.phone}
                     </div>
                   )}
                 </div>
@@ -165,13 +166,13 @@ export default function AdminSalesAdmins() {
 
               <div className="flex items-center gap-1 pt-3 border-t border-gray-100">
                 <span
-                  className={`flex-1 text-center text-xs font-medium py-1.5 rounded-md ${
+                  className={`flex-1 text-center text-xs font-medium py-1.5 rounded-md inline-flex items-center justify-center gap-1 ${
                     admin.is_active
                       ? "bg-green-50 text-green-700"
                       : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {admin.is_active ? "✓ Faol" : "Faol emas"}
+                  {admin.is_active ? <><FluentEmoji name="check" size={11} /> Faol</> : "Faol emas"}
                 </span>
                 <button
                   onClick={() => setEditing(admin)}

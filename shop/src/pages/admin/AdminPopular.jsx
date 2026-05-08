@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
 import { categories, formatPrice } from '../../data/products';
 import { resolveImage } from '../../api/client';
+import FluentEmoji from '../../components/FluentEmoji';
 
 export default function AdminPopular() {
   const { isSuperAdmin } = useAuth();
@@ -58,7 +59,7 @@ export default function AdminPopular() {
       {/* Faol ommabop */}
       <div>
         <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-          <span className="text-amber-500">⭐</span>
+          <FluentEmoji name="star" size={16} />
           Ommabop ro'yxatdagilar ({popularProducts.length})
         </h2>
 
@@ -95,7 +96,7 @@ export default function AdminPopular() {
                       </div>
                     )}
                     <div className="absolute bottom-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-md flex items-center gap-1">
-                      ⭐ OMMABOP
+                      <FluentEmoji name="star" size={11} /> OMMABOP
                     </div>
                   </div>
                   <div className="p-3 flex flex-col flex-1">

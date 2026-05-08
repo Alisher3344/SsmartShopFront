@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { pickupApi, resolveImage } from '../api/client'
+import FluentEmoji from '../components/FluentEmoji'
 
 const STATUS_BADGE = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -310,10 +311,10 @@ function HomeView({ point, pointLoading, counts, allOrders, onRefresh, onNavigat
                   </div>
                 )}
                 <div className="pt-2 mt-2 border-t border-gray-100">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
                     point.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {point.active ? '✓ FAOL' : 'YOPIQ'}
+                    {point.active ? <><FluentEmoji name="check" size={10} /> FAOL</> : 'YOPIQ'}
                   </span>
                 </div>
               </div>
@@ -555,7 +556,9 @@ function DeliverSection({ onDone }) {
           </div>
           <div className="flex justify-between text-sm pt-3 border-t border-green-200 mb-1">
             <span className="text-gray-600">To'lov:</span>
-            <span className="font-bold">{order.paymentMethod === 'card' ? '💳 Karta' : '💵 Naqd'}</span>
+            <span className="font-bold inline-flex items-center gap-1.5">
+              {order.paymentMethod === 'card' ? <><FluentEmoji name="card" size={14} /> Karta</> : <><FluentEmoji name="cash" size={14} /> Naqd</>}
+            </span>
           </div>
           <div className="flex justify-between text-base font-bold mb-3">
             <span>Jami:</span><span>{formatPrice(order.total)} so'm</span>
@@ -699,7 +702,9 @@ function OrderCard({ order }) {
       </div>
 
       <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
-        <span className="text-xs text-gray-500">{order.paymentMethod === 'card' ? '💳 Karta' : '💵 Naqd'}</span>
+        <span className="text-xs text-gray-500 inline-flex items-center gap-1">
+          {order.paymentMethod === 'card' ? <><FluentEmoji name="card" size={11} /> Karta</> : <><FluentEmoji name="cash" size={11} /> Naqd</>}
+        </span>
         <span className="font-bold">{formatPrice(order.total)} so'm</span>
       </div>
     </div>
@@ -791,7 +796,7 @@ function SettingsView({ point, user }) {
             <Field label="Manzil (RU)" value={point.address?.ru} />
             <Field label="Telefon" value={point.phone || '—'} />
             <Field label="Ish vaqti" value={point.workHours || point.work_hours || '—'} />
-            <Field label="Holat" value={point.active ? '✓ Faol' : 'Yopiq'} />
+            <Field label="Holat" value={point.active ? <span className="inline-flex items-center gap-1 justify-end"><FluentEmoji name="check" size={12} /> Faol</span> : 'Yopiq'} />
           </>
         )}
       </div>

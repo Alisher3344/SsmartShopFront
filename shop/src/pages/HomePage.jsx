@@ -20,7 +20,7 @@ export default function HomePage() {
     .filter((p) => p.isPopular)
     .slice(0, 8);
   // "Chegirmalar" bo'limi — faqat super admin /Tty0xssmart/sales orqali aksiyaga
-  // qo'shgan mahsulotlar (onSale = true). "🔥 Aksiya" yorlig'i (badges.sale) —
+  // qo'shgan mahsulotlar (onSale = true). "Aksiya" yorlig'i (badges.sale) —
   // faqat ko'rinish uchun, filterga ta'siri yo'q.
   const discountProducts = inStockProducts
     .filter(p => p.onSale)

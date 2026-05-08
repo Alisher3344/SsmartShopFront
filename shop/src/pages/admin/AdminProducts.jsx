@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { categories, formatPrice } from '../../data/products';
 import { PRODUCT_BADGES } from '../../data/badges';
 import ImageUpload from '../../components/ImageUpload';
+import FluentEmoji from '../../components/FluentEmoji';
 import { resolveImage } from '../../api/client';
 
 const EMPTY_PRODUCT = {
@@ -253,8 +254,8 @@ export default function AdminProducts() {
                         {p.onSale ? 'Aksiyada' : "Qo'yish"}
                       </button>
                     ) : (
-                      <span className={`text-xs ${p.onSale ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
-                        {p.onSale ? '🔥 Aksiyada' : '—'}
+                      <span className={`text-xs inline-flex items-center gap-1 ${p.onSale ? 'text-orange-600 font-medium' : 'text-gray-400'}`}>
+                        {p.onSale ? <><FluentEmoji name="fire" size={12} /> Aksiyada</> : '—'}
                       </span>
                     )}
                   </td>
@@ -481,10 +482,10 @@ export default function AdminProducts() {
                                 [arr[0], arr[idx]] = [arr[idx], arr[0]];
                                 setForm({ ...form, images: arr, image: arr[0] });
                               }}
-                              className="w-6 h-6 bg-white text-gray-700 rounded text-[9px] font-bold hover:bg-primary-50"
+                              className="w-6 h-6 bg-white text-gray-700 rounded text-[9px] font-bold hover:bg-primary-50 flex items-center justify-center"
                               title="Asosiy qilish"
                             >
-                              ★
+                              <FluentEmoji name="star" size={12} />
                             </button>
                           )}
                           <button
@@ -576,16 +577,16 @@ export default function AdminProducts() {
                             : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <span>{badge.icon}</span>
+                        <FluentEmoji name={badge.icon} size={14} />
                         <span>{badge.label.uz}</span>
-                        {isSelected && <span className="text-xs">✓</span>}
+                        {isSelected && <FluentEmoji name="check" size={12} />}
                       </button>
                     );
                   })}
                 </div>
                 {(form.badges || []).length > 0 && (
-                  <p className="text-xs text-green-700 mt-2">
-                    ✓ Tanlangan: {form.badges.length} ta yorliq
+                  <p className="text-xs text-green-700 mt-2 flex items-center gap-1">
+                    <FluentEmoji name="check" size={12} /> Tanlangan: {form.badges.length} ta yorliq
                   </p>
                 )}
               </div>

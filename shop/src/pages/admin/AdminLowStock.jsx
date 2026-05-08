@@ -1,6 +1,7 @@
 import { AlertTriangle, Package, RefreshCw } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { resolveImage } from '../../api/client';
+import FluentEmoji from '../../components/FluentEmoji';
 
 const STOCK_THRESHOLD = 2;
 
@@ -67,7 +68,7 @@ export default function AdminLowStock() {
       {!loading && lowStock.length === 0 && (
         <div className="card p-12 text-center text-gray-500">
           <Package className="w-12 h-12 mx-auto mb-3 text-green-300" />
-          <p className="text-lg font-medium text-green-700">Hammasi yetarli ✓</p>
+          <p className="text-lg font-medium text-green-700 flex items-center justify-center gap-2">Hammasi yetarli <FluentEmoji name="check" size={18} /></p>
           <p className="text-sm">Barcha mahsulotlar zaxirasi yetarli darajada</p>
         </div>
       )}

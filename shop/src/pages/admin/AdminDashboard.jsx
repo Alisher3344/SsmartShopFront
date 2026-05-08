@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { Package, Tag, Image as ImageIcon, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
+import FluentEmoji from '../../components/FluentEmoji';
 
 export default function AdminDashboard() {
   const { user, isSuperAdmin } = useAuth();
@@ -38,8 +39,8 @@ export default function AdminDashboard() {
           <div className="text-xs uppercase tracking-[0.18em] font-semibold text-gray-500 mb-1">
             {isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel'}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            Salom, <span className="admin-gradient-text">{user.name}</span> 👋
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight inline-flex items-center gap-2">
+            Salom, <span className="admin-gradient-text">{user.name}</span> <FluentEmoji name="wave" size={32} />
           </h1>
           <p className="text-gray-500 text-sm mt-2">
             {isSuperAdmin
@@ -92,7 +93,7 @@ export default function AdminDashboard() {
           </div>
           {lowStock.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-              <span>✓</span>
+              <FluentEmoji name="check" size={16} />
               <span>Hammasi yetarli — tashvishga o'rin yo'q</span>
             </div>
           ) : (
@@ -148,12 +149,12 @@ export default function AdminDashboard() {
 function PermItem({ ok, children }) {
   return (
     <li className={`flex items-center gap-2.5 ${ok ? '' : 'text-gray-400'}`}>
-      <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+      <span className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
         ok
-          ? 'bg-gradient-to-br from-green-100 to-emerald-200 text-green-700 ring-1 ring-emerald-300/60'
-          : 'bg-gray-100 text-gray-400'
+          ? 'bg-gradient-to-br from-green-100 to-emerald-200 ring-1 ring-emerald-300/60'
+          : 'bg-gray-100'
       }`}>
-        {ok ? '✓' : '✗'}
+        <FluentEmoji name={ok ? 'check' : 'cross'} size={12} />
       </span>
       <span>{children}</span>
     </li>
