@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Link2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { uploadApi, resolveImage } from '../api/client';
+import FluentEmoji from './FluentEmoji';
 
 /**
  * ImageUpload - rasmni qat'iy validatsiya bilan yuklash
@@ -221,7 +222,7 @@ export default function ImageUpload({ value, onChange, variant = 'product' }) {
                 <div><strong>Format:</strong> faqat PNG (shaffof fonli rasm)</div>
                 <div><strong>Hajm:</strong> {MAX_SIZE_MB} MB dan oshmasligi kerak</div>
                 <div><strong>O'lcham:</strong> har qanday (cheklov yo'q)</div>
-                <div className="text-blue-700">📌 Mahsulot rasmini orqa fonsiz (shaffof PNG) yuklang</div>
+                <div className="text-blue-700 flex items-center gap-1.5"><FluentEmoji name="pushpin" size={14} /> Mahsulot rasmini orqa fonsiz (shaffof PNG) yuklang</div>
               </>
             ) : (
               <>
@@ -229,7 +230,7 @@ export default function ImageUpload({ value, onChange, variant = 'product' }) {
                 <div><strong>O'lcham:</strong> {config.label}</div>
                 <div><strong>Hajm:</strong> {MAX_SIZE_MB} MB dan oshmasligi kerak</div>
                 {variant === 'product' && (
-                  <div className="text-blue-700">📌 Mahsulot uchun vertikal rasm: yaqindan, professional</div>
+                  <div className="text-blue-700 flex items-center gap-1.5"><FluentEmoji name="pushpin" size={14} /> Mahsulot uchun vertikal rasm: yaqindan, professional</div>
                 )}
               </>
             )}

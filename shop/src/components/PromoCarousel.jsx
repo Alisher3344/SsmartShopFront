@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
 import { formatPrice, calculateMonthly } from '../data/products';
+import FluentEmoji from './FluentEmoji';
 
 // Uzum-style fon ranglari (har slide uchun har xil)
 const SLIDE_BG_COLORS = [
@@ -149,8 +150,9 @@ export default function PromoCarousel() {
 
                           {/* Oylik to'lov */}
                           {monthly > 0 && (
-                            <div className="text-xs sm:text-sm text-white/90 mb-3">
-                              💳 {formatPrice(monthly)} {t('common.currency')} × {safeCreditMonths} oy
+                            <div className="text-xs sm:text-sm text-white/90 mb-3 flex items-center gap-1.5">
+                              <FluentEmoji name="card" size={16} />
+                              {formatPrice(monthly)} {t('common.currency')} × {safeCreditMonths} oy
                             </div>
                           )}
                         </div>

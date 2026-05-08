@@ -7,6 +7,7 @@ import { useAdminData } from '../context/AdminDataContext';
 import { useAuthGate } from '../context/AuthGateContext';
 import { formatPrice } from '../data/products';
 import { ordersApi } from '../api/client';
+import FluentEmoji from '../components/FluentEmoji';
 
 export default function CartPage() {
   const { t, i18n } = useTranslation();
@@ -197,8 +198,8 @@ export default function CartPage() {
                   </div>
 
                   {reachedMax && (
-                    <div className="text-[11px] text-amber-700 mt-1.5">
-                      ⚠️ Maksimal {stock} ta mavjud
+                    <div className="text-[11px] text-amber-700 mt-1.5 flex items-center gap-1">
+                      <FluentEmoji name="warning" size={12} /> Maksimal {stock} ta mavjud
                     </div>
                   )}
                 </div>
@@ -239,7 +240,7 @@ export default function CartPage() {
                           {point.address[lang] || point.address.uz}
                         </div>
                         {point.work_hours && (
-                          <div className="text-xs text-gray-500 mt-0.5">🕐 {point.work_hours}</div>
+                          <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><FluentEmoji name="clock" size={12} /> {point.work_hours}</div>
                         )}
                       </div>
                     </label>

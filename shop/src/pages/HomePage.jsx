@@ -4,6 +4,7 @@ import ProductCard from '../components/ProductCard';
 import PromoCarousel from '../components/PromoCarousel';
 import { useAdminData } from '../context/AdminDataContext';
 import MIcon from '../components/MIcon';
+import FluentEmoji from '../components/FluentEmoji';
 
 export default function HomePage() {
   const { t, i18n } = useTranslation();
@@ -78,7 +79,7 @@ export default function HomePage() {
         <section className="container-custom py-10">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              🔥 {t('products.discount')}
+              <FluentEmoji name="fire" size={28} /> {t('products.discount')}
             </h2>
             <Link to="/catalog" className="text-primary-600 text-sm font-medium hover:underline flex items-center gap-1">
               {t('common.showAll')} <MIcon name="arrow_forward" size={16} />

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
 import { formatPrice, calculateMonthly } from '../../data/products';
 import ImageUpload from '../../components/ImageUpload';
+import FluentEmoji from '../../components/FluentEmoji';
 import { resolveImage } from '../../api/client';
 
 const EMPTY_BANNER = {
@@ -175,8 +176,8 @@ export default function AdminBanners() {
                   </div>
                 )}
                 {monthly > 0 && (
-                  <div className="text-xs text-primary-600 mt-1 mb-2">
-                    💳 {formatPrice(monthly)} so'm / {banner.creditMonths} oy
+                  <div className="text-xs text-primary-600 mt-1 mb-2 flex items-center gap-1">
+                    <FluentEmoji name="card" size={12} /> {formatPrice(monthly)} so'm / {banner.creditMonths} oy
                   </div>
                 )}
 
@@ -354,9 +355,9 @@ export default function AdminBanners() {
                   <div className="text-xs text-blue-700 font-medium mb-1">Avto-hisoblangan:</div>
                   <div className="space-y-0.5 text-blue-900">
                     {discountPreview > 0 && (
-                      <div>🔥 Chegirma: <strong>−{discountPreview}%</strong></div>
+                      <div className="flex items-center gap-1.5"><FluentEmoji name="fire" size={14} /> Chegirma: <strong>−{discountPreview}%</strong></div>
                     )}
-                    <div>💳 Oylik to'lov: <strong>{formatPrice(monthlyPreview)} so'm / {form.creditMonths} oy</strong></div>
+                    <div className="flex items-center gap-1.5"><FluentEmoji name="card" size={14} /> Oylik to'lov: <strong>{formatPrice(monthlyPreview)} so'm / {form.creditMonths} oy</strong></div>
                   </div>
                 </div>
               )}

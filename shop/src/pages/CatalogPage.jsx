@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, SlidersHorizontal, ChevronRight, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import FluentEmoji from '../components/FluentEmoji';
 import { categories, findCategoryById, findSubcategoryById } from '../data/products';
 import { useAdminData } from '../context/AdminDataContext';
 
@@ -258,7 +259,7 @@ export default function CatalogPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
-              <div className="text-5xl mb-4">🔍</div>
+              <div className="mb-4 flex justify-center"><FluentEmoji name="search" size={56} /></div>
               <p className="text-lg font-medium mb-1">{t('products.notFound')}</p>
               <p className="text-sm">{t('products.notFoundDesc')}</p>
             </div>

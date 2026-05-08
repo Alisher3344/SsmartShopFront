@@ -5,6 +5,7 @@ import { useAuthGate } from '../context/AuthGateContext';
 import { formatPrice, calculateMonthly } from '../data/products';
 import { getBadgeById } from '../data/badges';
 import MIcon from './MIcon';
+import FluentEmoji from './FluentEmoji';
 
 export default function ProductCard({ product }) {
   const { t, i18n } = useTranslation();
@@ -59,7 +60,7 @@ export default function ProductCard({ product }) {
                 className={`${badge.bgClass} ${badge.textClass} text-[10px] font-bold px-2 py-1 rounded-md shadow-md flex items-center gap-1`}
                 title={badge.label[lang]}
               >
-                <span className="flex-shrink-0">{badge.icon}</span>
+                <span className="flex-shrink-0"><FluentEmoji name={badge.icon} size={12} /></span>
                 <span>{badge.label[lang]}</span>
               </div>
             ))}

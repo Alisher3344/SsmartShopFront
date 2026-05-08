@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft } from 'lucide-react';
 import { resolveImage, ordersApi, reviewsApi } from '../api/client';
+import FluentEmoji from '../components/FluentEmoji';
 
 const TABS = {
   orders:    { id: 'orders',    label: { uz: 'Buyurtmalarim',           ru: 'Мои заказы' },           icon: Package },
@@ -31,12 +32,12 @@ const TR = {
   noOrdersHint: { uz: "Hozircha bu turdagi buyurtmangiz yo'q", ru: 'Заказов этого типа пока нет' },
   cancel:     { uz: 'Bekor qilish',               ru: 'Отменить' },
   cancelConfirm: { uz: "Buyurtmani bekor qilishni tasdiqlaysizmi?", ru: 'Отменить заказ?' },
-  pickupCodeLabel: { uz: "🔢 Olib ketish kodi (punkt admin'ga ko'rsating):", ru: '🔢 Код выдачи (покажите администратору ПВЗ):' },
+  pickupCodeLabel: { uz: "Olib ketish kodi (punkt admin'ga ko'rsating):", ru: 'Код выдачи (покажите администратору ПВЗ):' },
   // Statuses
   sPending:   { uz: 'Buyurtmangiz tasdiqlanmoqda', ru: 'Ваш заказ обрабатывается' },
   sConfirmed: { uz: "Tasdiqlandi — punktga jo'natilmoqda", ru: 'Подтверждён — отправляется в пункт' },
   sReady:     { uz: 'Mahsulot punktda tayyor — olib ketishingiz mumkin', ru: 'Товар готов — можно забрать' },
-  sDelivered: { uz: 'Buyurtma topshirildi ✓',     ru: 'Заказ выдан ✓' },
+  sDelivered: { uz: 'Buyurtma topshirildi',       ru: 'Заказ выдан' },
   sCancelled: { uz: 'Buyurtmangiz bekor qilindi', ru: 'Заказ отменён' },
   // Reviews
   reviewsTitle: { uz: 'Sharhlar',                 ru: 'Отзывы' },
@@ -379,8 +380,8 @@ function OrdersTab({ lang = 'uz' }) {
 
                 {order.status === 'ready' && order.pickupCode && (
                   <div className="mb-3 p-3 bg-green-50 border-2 border-dashed border-green-300 rounded-lg text-center">
-                    <div className="text-xs text-green-700 mb-1 font-medium">
-                      {tr('pickupCodeLabel', lang)}
+                    <div className="text-xs text-green-700 mb-1 font-medium flex items-center justify-center gap-1.5">
+                      <FluentEmoji name="numbers" size={14} /> {tr('pickupCodeLabel', lang)}
                     </div>
                     <div className="font-mono text-2xl font-bold text-green-900 tracking-[0.3em] py-1">
                       {order.pickupCode}
@@ -418,7 +419,7 @@ function OrdersTab({ lang = 'uz' }) {
                     </div>
                   )}
                   {order.deliveryType === 'courier' && (
-                    <div>📦 Yetkazib berish: {order.deliveryAddress}</div>
+                    <div className="flex items-center gap-1.5"><FluentEmoji name="package" size={12} /> Yetkazib berish: {order.deliveryAddress}</div>
                   )}
                 </div>
 
@@ -764,8 +765,8 @@ function PickupTab({ lang = 'uz' }) {
           <div>
             <div className="font-semibold text-gray-900">{tr('mainOffice', lang)}</div>
             <div className="text-sm text-gray-600">{lang === 'ru' ? 'г. Карши, ул. И.Каримова 276' : "Qarshi sh., I.Karimov ko'chasi 276-uy"}</div>
-            <div className="text-xs text-gray-500 mt-1">🕐 {lang === 'ru' ? 'Ежедневно' : 'Har kuni'} 09:00 - 21:00</div>
-            <div className="text-xs text-gray-500">📞 +998 94 808 00 55</div>
+            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1"><FluentEmoji name="clock" size={12} /> {lang === 'ru' ? 'Ежедневно' : 'Har kuni'} 09:00 - 21:00</div>
+            <div className="text-xs text-gray-500 flex items-center gap-1"><FluentEmoji name="phone" size={12} /> +998 94 808 00 55</div>
           </div>
         </div>
       </div>
@@ -783,7 +784,7 @@ function ContactTab({ lang = 'uz' }) {
           className="card p-4 flex items-center gap-3 hover:bg-gray-50"
         >
           <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-            <span className="text-xl">📞</span>
+            <FluentEmoji name="phone" size={22} />
           </div>
           <div>
             <div className="text-xs text-gray-500">{tr('phone', lang)}</div>
@@ -828,8 +829,8 @@ function LanguageTab() {
     try { return localStorage.getItem('i18nextLng') || 'uz'; } catch { return 'uz'; }
   });
   const langs = [
-    { id: 'uz', label: "O'zbekcha", flag: '🇺🇿' },
-    { id: 'ru', label: 'Русский', flag: '🇷🇺' },
+    { id: 'uz', label: "O'zbekcha", flag: 'flag-uz' },
+    { id: 'ru', label: 'Русский', flag: 'flag-ru' },
   ];
   const change = (id) => {
     setCurrent(id);
@@ -851,9 +852,9 @@ function LanguageTab() {
               current === l.id ? 'text-primary-600 font-semibold' : 'text-gray-900'
             }`}
           >
-            <span className="text-2xl">{l.flag}</span>
+            <FluentEmoji name={l.flag} size={28} />
             <span className="flex-1">{l.label}</span>
-            {current === l.id && <span className="text-primary-600">✓</span>}
+            {current === l.id && <FluentEmoji name="check" size={18} />}
           </button>
         ))}
       </div>
