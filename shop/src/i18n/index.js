@@ -13,11 +13,12 @@ i18n
       ru: { translation: ru },
     },
     fallbackLng: 'uz',
+    lng: 'uz',
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       caches: ['localStorage'],
     },
   });
