@@ -7,6 +7,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
 import HomePage from './pages/HomePage';
+import BUPage from './pages/BUPage';
 import CatalogPage from './pages/CatalogPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
@@ -66,6 +67,7 @@ function App() {
 
               {/* Sayt routes — header/footer bilan */}
               <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+              <Route path="/b-u" element={<PublicLayout><BUPage /></PublicLayout>} />
               <Route path="/catalog" element={<PublicLayout><CatalogPage /></PublicLayout>} />
               <Route path="/product/:id" element={<PublicLayout><ProductPage /></PublicLayout>} />
               <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />

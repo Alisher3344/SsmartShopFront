@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useState, useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuthGate } from '../context/AuthGateContext';
-import { categories } from '../data/products';
+import { useAdminData } from '../context/AdminDataContext';
 import { resolveImage } from '../api/client';
 import MIcon from './MIcon';
 
@@ -42,11 +42,17 @@ export default function Header() {
   const navigate = useNavigate();
   const { cartCount, favorites } = useShop();
   const { requireAuth } = useAuthGate();
+  const { visibleCategories } = useAdminData();
+  // Mega menu va mobile menu uchun — barcha mavjud kategoriyalar (B/U ham)
+  const categories = visibleCategories;
+  // Desktop pastki nav (5 ta tezkor) uchun — B/U alohida tugma bor, takrorlanmasin
+  const topCategories = visibleCategories.filter(c => c.id !== 'used').slice(0, 5);
   const currentUser = useCurrentUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const megaRef = useRef(null);
+  const megaBtnRef = useRef(null);
 
   const handleProfileClick = (e) => {
     e.preventDefault();
@@ -61,10 +67,12 @@ export default function Header() {
 
   const lang = i18n.language;
 
-  // Mega menu tashqarisiga bosilganda yopish
+  // Mega menu tashqarisiga bosilganda yopish — toggle tugmasini istisno qilamiz
   useEffect(() => {
     const handler = (e) => {
-      if (megaRef.current && !megaRef.current.contains(e.target)) {
+      const inPanel = megaRef.current && megaRef.current.contains(e.target);
+      const inToggleBtn = megaBtnRef.current && megaBtnRef.current.contains(e.target);
+      if (!inPanel && !inToggleBtn) {
         setMegaOpen(false);
       }
     };
@@ -127,7 +135,12 @@ export default function Header() {
 
           {/* "Barcha toifalar" tugmasi - desktop */}
           <button
-            onClick={() => setMegaOpen(!megaOpen)}
+            ref={megaBtnRef}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMegaOpen((prev) => !prev);
+            }}
             className="hidden lg:flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex-shrink-0"
           >
             <MIcon name={megaOpen ? 'close' : 'menu'} size={18} />
@@ -216,7 +229,10 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => setMobileOpen(!mobileOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileOpen((prev) => !prev);
+              }}
               className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Menu"
             >
@@ -229,31 +245,50 @@ export default function Header() {
         <nav className="hidden lg:flex items-center gap-6 h-11 border-t border-gray-100 text-sm">
           <Link
             to="/"
-            className={`font-medium transition-colors ${
+            className={`font-medium transition-colors whitespace-nowrap ${
               location.pathname === '/' ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
             }`}
           >
             {t('nav.home')}
           </Link>
           <Link
-            to="/catalog"
-            className={`font-medium transition-colors ${
-              location.pathname === '/catalog' ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
-            }`}
+            to="/b-u"
+            className="group relative flex items-center gap-1.5 px-3 py-1.5 -my-1 rounded-full bg-gradient-to-r from-gray-900 to-black text-white font-semibold text-xs shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-1 ring-black/10 whitespace-nowrap"
           >
-            {t('nav.catalog')}
+            <img
+              src="https://cdn.simpleicons.org/apple/ffffff"
+              alt=""
+              className="inline-block w-4 h-4 object-contain align-middle"
+            />
+            <span>{t('nav.bu')}</span>
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none shadow-sm">
+              NEW
+            </span>
           </Link>
           {/* Quick category links */}
-          {categories.slice(0, 5).map(cat => (
+          {topCategories.map(cat => (
             <Link
               key={cat.id}
               to={`/catalog?category=${cat.id}`}
-              className="text-gray-700 hover:text-primary-600 transition-colors"
+              className="text-gray-700 hover:text-primary-600 transition-colors whitespace-nowrap"
             >
               <img src={cat.icon} alt="" className="inline-block w-5 h-5 object-contain mr-1 align-middle" />
-              {cat.name[lang]}
+              {cat.shortName?.[lang] || cat.name[lang]}
             </Link>
           ))}
+
+          {/* "Ustalar" tugmasi — o'ng oxirida, 1.5x kattaroq, ko'zga tashlanadigan */}
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="group relative ml-auto flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-orange-300/50 whitespace-nowrap"
+          >
+            <MIcon name="construction" size={20} className="text-white" />
+            <span>{lang === 'ru' ? 'Мастера' : 'Ustalar'}</span>
+            <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none shadow-sm flex items-center justify-center">
+              ★
+            </span>
+          </button>
         </nav>
       </div>
 
@@ -319,6 +354,11 @@ export default function Header() {
               <Link to="/catalog" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
                 <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Package/3D/package_3d.png" alt="" className="w-5 h-5 object-contain" />
                 <span>{t('nav.catalog')}</span>
+              </Link>
+              <Link to="/b-u" className="relative px-3 py-2.5 bg-gradient-to-r from-gray-900 to-black text-white rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ring-1 ring-black/10">
+                <img src="https://cdn.simpleicons.org/apple/ffffff" alt="" className="w-5 h-5 object-contain" />
+                <span>{t('nav.bu')}</span>
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">NEW</span>
               </Link>
               <Link to="/profile" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
                 <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Bust%20in%20silhouette/3D/bust_in_silhouette_3d.png" alt="" className="w-5 h-5 object-contain" />

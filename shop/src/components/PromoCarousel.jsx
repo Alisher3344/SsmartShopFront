@@ -1,236 +1,205 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAdminData } from '../context/AdminDataContext';
-import { formatPrice, calculateMonthly } from '../data/products';
-import FluentEmoji from './FluentEmoji';
+import { resolveImage } from '../api/client';
 
-// Uzum-style fon ranglari (har slide uchun har xil)
-const SLIDE_BG_COLORS = [
-  { from: '#7c3aed', to: '#5b21b6', accent: '#f97316' }, // binafsha + tok sariq
-  { from: '#0ea5e9', to: '#0c4a6e', accent: '#fbbf24' }, // ko'k + sariq
-  { from: '#ec4899', to: '#831843', accent: '#10b981' }, // pushti + yashil
-  { from: '#f59e0b', to: '#7c2d12', accent: '#3b82f6' }, // sariq + ko'k
-  { from: '#10b981', to: '#064e3b', accent: '#f97316' }, // yashil + sariq
-  { from: '#ef4444', to: '#7f1d1d', accent: '#fbbf24' }, // qizil + sariq
-];
+// Cheksiz slide karusel (1240×413). O'ngdan chapga doimiy aylanish.
+// Texnika: oxiriga birinchi slide nusxasi qo'shiladi. Tasma oxirgi nusxaga yetganda
+// transitionsiz boshiga sakraydi — foydalanuvchi orqaga qaytayotganini sezmaydi.
+const AUTOPLAY_MS = 3000;
+const TRANSITION_MS = 600;
 
 export default function PromoCarousel() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { activeBanners } = useAdminData();
-  const slides = activeBanners;
-  const lang = i18n.language;
+  const lang = i18n.language === 'ru' ? 'ru' : 'uz';
+  const allSlides = activeBanners || [];
+  // Faqat 'home' slot bannerlari karuselda chiqadi
+  const slides = allSlides
+    .filter((b) => (b.slot || 'home') === 'home')
+    .filter((b) => {
+      const img = lang === 'ru' ? (b.imageRu || b.image) : (b.imageUz || b.image);
+      return !!img;
+    });
+  const len = slides.length;
+  const hasClone = len > 1;
+  // Renderlash uchun: ortiqcha bitta nusxa oxirida
+  const renderSlides = hasClone ? [...slides, slides[0]] : slides;
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [visualIndex, setVisualIndex] = useState(0);
+  const [withTransition, setWithTransition] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const jumpTimerRef = useRef(null);
+  const reenableTimerRef = useRef(null);
 
+  // Slidelar o'zgarsa indexni nolga qaytaramiz
   useEffect(() => {
-    if (isPaused || !slides || slides.length <= 1) return;
+    setVisualIndex(0);
+    setWithTransition(true);
+  }, [len, lang]);
+
+  // Auto-play
+  useEffect(() => {
+    if (isPaused || len <= 1) return;
     const interval = setInterval(() => {
-      setActiveIndex(prev => (prev + 1) % slides.length);
-    }, 5000);
+      setWithTransition(true);
+      setVisualIndex((prev) => prev + 1);
+    }, AUTOPLAY_MS);
     return () => clearInterval(interval);
-  }, [isPaused, slides]);
+  }, [isPaused, len]);
 
-  if (!slides || slides.length === 0) {
-    return (
-      <section className="container-custom pt-4">
-        <div className="rounded-2xl bg-gradient-to-br from-primary-600 to-primary-900 text-white p-8 md:p-12 text-center">
-          <h1 className="text-2xl md:text-4xl font-bold mb-3">{t('hero.title')}</h1>
-          <p className="text-base md:text-lg text-primary-100 mb-5">{t('hero.subtitle')}</p>
-          <Link to="/catalog" className="inline-flex items-center gap-2 bg-white text-primary-700 px-5 py-2.5 rounded-full font-semibold">
-            {t('hero.cta')} <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
-    );
-  }
+  // Klonga (visualIndex === len) yetganda: transitsiya tugagandan keyin
+  // transitionsiz holatda boshiga (0) sakraymiz
+  useEffect(() => {
+    if (!hasClone || visualIndex !== len) return;
+    jumpTimerRef.current = setTimeout(() => {
+      setWithTransition(false);
+      setVisualIndex(0);
+      // Keyingi frame'da transition'ni yana yoqamiz, aks holda 0 ga sakrash animatsiyali bo'lib qoladi
+      reenableTimerRef.current = setTimeout(() => setWithTransition(true), 50);
+    }, TRANSITION_MS);
+    return () => {
+      clearTimeout(jumpTimerRef.current);
+      clearTimeout(reenableTimerRef.current);
+    };
+  }, [visualIndex, len, hasClone]);
 
-  const goNext = () => setActiveIndex(prev => (prev + 1) % slides.length);
-  const goPrev = () => setActiveIndex(prev => (prev - 1 + slides.length) % slides.length);
+  if (len === 0) return null;
+
+  const realIndex = visualIndex % len;
+
+  const goNext = () => {
+    setWithTransition(true);
+    setVisualIndex((prev) => (prev >= len ? 1 : prev + 1));
+  };
+
+  const goPrev = () => {
+    if (visualIndex === 0) {
+      // Boshida turibmiz — transitionsiz klonga (len) sakraymiz,
+      // keyin oddiy transitsiya bilan oxirgi haqiqiy slidega (len-1) suriladi.
+      setWithTransition(false);
+      setVisualIndex(len);
+      requestAnimationFrame(() => {
+        setWithTransition(true);
+        setVisualIndex(len - 1);
+      });
+    } else {
+      setWithTransition(true);
+      setVisualIndex((prev) => prev - 1);
+    }
+  };
+
+  const handleDotClick = (idx) => {
+    setWithTransition(true);
+    setVisualIndex(idx);
+  };
 
   const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
   const handleTouchMove = (e) => { touchEndX.current = e.touches[0].clientX; };
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 50) diff > 0 ? goNext() : goPrev();
+    if (Math.abs(diff) > 50) (diff > 0 ? goNext : goPrev)();
+    touchStartX.current = 0;
+    touchEndX.current = 0;
   };
 
   return (
-    <section className="container-custom pt-4">
+    <section className="container-custom pt-3 sm:pt-4">
       <div
-        className="relative"
+        className="relative group"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Asosiy karusel — yumaloq burchaklar */}
-        <div className="relative rounded-2xl overflow-hidden h-[280px] sm:h-[320px] md:h-[380px] lg:h-[420px]">
-          {slides.map((slide, idx) => {
-            const isActive = idx === activeIndex;
-            const safeSalePrice = Number(slide.salePrice) || 0;
-            const safeOldPrice = Number(slide.oldPrice) || 0;
-            const safeCreditMonths = Number(slide.creditMonths) || 0;
-            const monthly = safeCreditMonths > 0 && safeSalePrice > 0
-              ? calculateMonthly(safeSalePrice, safeCreditMonths)
-              : 0;
+        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[1240/413] bg-gray-100 shadow-sm">
+          {/* Slidelar tasmasi — gorizontal, transform bilan suriladi */}
+          <div
+            className="absolute inset-0 flex"
+            style={{
+              transform: `translateX(-${visualIndex * 100}%)`,
+              transition: withTransition ? `transform ${TRANSITION_MS}ms ease-in-out` : 'none',
+            }}
+          >
+            {renderSlides.map((slide, idx) => {
+              const link = slide.link || '';
+              const isExternal = /^https?:\/\//i.test(link);
+              const imgSrc = lang === 'ru'
+                ? (slide.imageRu || slide.image)
+                : (slide.imageUz || slide.image);
+              const Img = (
+                <img
+                  src={resolveImage(imgSrc)}
+                  alt=""
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  draggable={false}
+                  className="w-full h-full object-cover select-none"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+              );
+              const slideClass = 'relative flex-shrink-0 w-full h-full';
+              const key = `${slide.id}-${idx}`;
 
-            const colors = SLIDE_BG_COLORS[idx % SLIDE_BG_COLORS.length];
+              if (!link) {
+                return <div key={key} className={slideClass}>{Img}</div>;
+              }
+              if (isExternal) {
+                return (
+                  <a key={key} href={link} target="_blank" rel="noopener noreferrer" className={slideClass} aria-label={`Slide ${idx + 1}`}>
+                    {Img}
+                  </a>
+                );
+              }
+              return (
+                <Link key={key} to={link} className={slideClass} aria-label={`Slide ${idx + 1}`}>
+                  {Img}
+                </Link>
+              );
+            })}
+          </div>
 
-            return (
-              <div
-                key={slide.id}
-                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                  isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                }`}
-                style={{ background: `linear-gradient(135deg, ${colors.from} 0%, ${colors.to} 100%)` }}
-              >
-                <div className="relative h-full flex items-center">
-                  {/* CHAP - Matn */}
-                  <div className="w-1/2 h-full flex items-center px-6 sm:px-10 md:px-14 lg:px-20">
-                    <div className="text-white">
-                      {/* Mahsulot nomi */}
-                      <h2
-                        className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-2 leading-tight transition-all duration-700 line-clamp-2 ${
-                          isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                        }`}
-                        style={{
-                          transitionDelay: isActive ? '300ms' : '0ms',
-                          textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                        }}
-                      >
-                        {slide.productName?.[lang] || ''}
-                      </h2>
-
-                      {/* Qisqa tasnif (description) */}
-                      {slide.description?.[lang] && (
-                        <p
-                          className={`text-sm sm:text-base text-white/90 mb-3 line-clamp-2 transition-all duration-700 ${
-                            isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                          }`}
-                          style={{
-                            transitionDelay: isActive ? '400ms' : '0ms',
-                            textShadow: '0 1px 6px rgba(0,0,0,0.3)',
-                          }}
-                        >
-                          {slide.description[lang]}
-                        </p>
-                      )}
-
-                      {/* Narxlar — Uzum style: katta sariq blok */}
-                      {safeSalePrice > 0 && (
-                        <div
-                          className={`transition-all duration-700 ${
-                            isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                          }`}
-                          style={{ transitionDelay: isActive ? '500ms' : '0ms' }}
-                        >
-                          {/* Asosiy narx — katta */}
-                          <div
-                            className="inline-block rounded-full px-4 py-1.5 sm:px-5 sm:py-2 mb-2 shadow-lg"
-                            style={{ background: colors.accent }}
-                          >
-                            <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">
-                              {formatPrice(safeSalePrice)}
-                            </span>
-                            <span className="text-sm sm:text-base text-white/90 ml-1.5">{t('common.currency')}</span>
-                          </div>
-
-                          {/* Eski narx */}
-                          {safeOldPrice > 0 && (
-                            <div className="text-sm md:text-base text-white/70 line-through mb-1.5">
-                              {formatPrice(safeOldPrice)} {t('common.currency')}
-                            </div>
-                          )}
-
-                          {/* Oylik to'lov */}
-                          {monthly > 0 && (
-                            <div className="text-xs sm:text-sm text-white/90 mb-3 flex items-center gap-1.5">
-                              <FluentEmoji name="card" size={16} />
-                              {formatPrice(monthly)} {t('common.currency')} × {safeCreditMonths} oy
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* CTA tugma */}
-                      <div
-                        className={`transition-all duration-700 ${
-                          isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                        }`}
-                        style={{ transitionDelay: isActive ? '700ms' : '0ms' }}
-                      >
-                        <Link
-                          to={slide.link || '/catalog'}
-                          className="inline-flex items-center gap-2 bg-white text-gray-900 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-bold hover:scale-105 transition-all shadow-xl text-xs sm:text-sm"
-                        >
-                          {t('products.buy')}
-                          <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* O'NG - Rasm — maksimal kattalashtirilgan */}
-                  <div className="w-1/2 h-full flex items-center justify-center relative">
-                    <img
-                      src={slide.image}
-                      alt={slide.productName?.[lang] || ''}
-                      className={`object-contain transition-transform duration-700 ${
-                        isActive ? 'scale-100' : 'scale-90'
-                      }`}
-                      style={{
-                        width: '110%',
-                        height: '120%',
-                        maxWidth: 'none',
-                        filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))'
-                      }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Strelkalar — karusel ichida, rasmdan tashqarida */}
-          {slides.length > 1 && (
+          {/* Prev/Next tugmalari */}
+          {len > 1 && (
             <>
               <button
+                type="button"
                 onClick={goPrev}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/30 hover:bg-white/50 backdrop-blur rounded-full flex items-center justify-center transition-all"
-                aria-label="Previous"
+                aria-label="Previous slide"
+                className="absolute left-2 sm:left-3 md:left-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-white/70 hover:bg-white text-gray-900 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-md ring-1 ring-black/5 opacity-90 md:opacity-0 md:group-hover:opacity-100 hover:scale-110"
               >
-                <ChevronLeft className="w-5 h-5 text-white" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
               </button>
               <button
+                type="button"
                 onClick={goNext}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 bg-white/30 hover:bg-white/50 backdrop-blur rounded-full flex items-center justify-center transition-all"
-                aria-label="Next"
+                aria-label="Next slide"
+                className="absolute right-2 sm:right-3 md:right-4 top-1/2 -translate-y-1/2 z-20 w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-white/70 hover:bg-white text-gray-900 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-md ring-1 ring-black/5 opacity-90 md:opacity-0 md:group-hover:opacity-100 hover:scale-110"
               >
-                <ChevronRight className="w-5 h-5 text-white" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.5} />
               </button>
             </>
           )}
 
-          {/* Pastdagi indikatorlar */}
-          {slides.length > 1 && (
-            <div className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5">
+          {/* Dot indikatorlar — haqiqiy slide soni */}
+          {len > 1 && (
+            <div className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-black/30 backdrop-blur-md">
               {slides.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveIndex(idx)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    idx === activeIndex
-                      ? 'bg-white w-6'
-                      : 'bg-white/50 hover:bg-white/70 w-1.5'
+                  type="button"
+                  onClick={() => handleDotClick(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    idx === realIndex
+                      ? 'bg-white w-6 sm:w-7'
+                      : 'bg-white/50 hover:bg-white/80 w-1.5'
                   }`}
-                  aria-label={`Slide ${idx + 1}`}
                 />
               ))}
             </div>

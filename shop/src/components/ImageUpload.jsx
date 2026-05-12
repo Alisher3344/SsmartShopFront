@@ -39,6 +39,16 @@ const VARIANTS = {
     skipSize: true,          // hajm cheklov yo'q
     skipAll: false,
   },
+  slide: {
+    width: 1240,
+    height: 413,
+    ratio: 1240 / 413,
+    label: '1240×413 (JPG yoki PNG)',
+    aspectClass: 'aspect-[1240/413]',
+    previewWidth: 'w-full',
+    pngOnly: false,
+    skipDimensions: false,
+  },
   free: {
     width: 800,
     height: 600,

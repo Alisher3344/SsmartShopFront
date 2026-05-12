@@ -1,22 +1,29 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, X, Save, Eye, EyeOff, Image as ImageIcon } from 'lucide-react';
+import { Plus, Trash2, X, Save, Eye, EyeOff, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
-import { formatPrice, calculateMonthly } from '../../data/products';
 import ImageUpload from '../../components/ImageUpload';
-import FluentEmoji from '../../components/FluentEmoji';
 import { resolveImage } from '../../api/client';
+import { categories as allCategories } from '../../data/products';
 
+// Soddalashtirilgan banner: faqat rasm yuklash.
+// 1240×413 - boshqa input kerak emas.
+// Backend hali ham product_name va sale_price kutgani uchun bo'sh/0 yuboramiz.
 const EMPTY_BANNER = {
-  image: '',
-  productName: { uz: '', ru: '' },
-  description: { uz: '', ru: '' }, // qisqa tasnif
-  oldPrice: '',
-  salePrice: '',
-  creditMonths: 12,
+  imageUz: '',
+  imageRu: '',
   link: '/catalog',
   active: true,
+  slot: 'home',
+};
+
+const DEFAULT_PAYLOAD = {
+  productName: { uz: '', ru: '' },
+  description: { uz: '', ru: '' },
+  oldPrice: null,
+  salePrice: 0,
+  creditMonths: 0,
 };
 
 export default function AdminBanners() {
@@ -31,20 +38,23 @@ export default function AdminBanners() {
 
   if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
 
-  const openAdd = () => {
+  const openAdd = (slot = 'home') => {
     setEditingId(null);
-    setForm(EMPTY_BANNER);
+    setForm({ ...EMPTY_BANNER, slot, link: slot === 'bu' ? '/b-u' : '/catalog' });
+    setFormError('');
     setShowForm(true);
   };
 
   const openEdit = (banner) => {
     setEditingId(banner.id);
     setForm({
-      ...banner,
-      oldPrice: banner.oldPrice || '',
-      salePrice: banner.salePrice || '',
-      description: banner.description || { uz: '', ru: '' }, // eski bannerlarda yo'q
+      imageUz: banner.imageUz || banner.image || '',
+      imageRu: banner.imageRu || banner.image || '',
+      link: banner.link || '/catalog',
+      active: !!banner.active,
+      slot: banner.slot || 'home',
     });
+    setFormError('');
     setShowForm(true);
   };
 
@@ -57,15 +67,18 @@ export default function AdminBanners() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+    if (!form.imageUz || !form.imageRu) {
+      setFormError("Iltimos, ikkala til uchun ham 1240×413 rasm yuklang (UZ va RU)");
+      return;
+    }
     const data = {
-      image: form.image,
-      productName: form.productName,
-      description: form.description,
-      link: form.link || '/catalog',
+      image: form.imageUz, // backward-compat
+      imageUz: form.imageUz,
+      imageRu: form.imageRu,
+      link: form.link?.trim() || '/catalog',
       active: !!form.active,
-      oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
-      salePrice: Number(form.salePrice),
-      creditMonths: Number(form.creditMonths) || 12,
+      slot: form.slot || 'home',
+      ...(editingId ? {} : DEFAULT_PAYLOAD),
     };
 
     setSubmitting(true);
@@ -92,30 +105,100 @@ export default function AdminBanners() {
     }
   };
 
-  // Preview hisoblovi
-  const monthlyPreview = form.salePrice && form.creditMonths
-    ? calculateMonthly(Number(form.salePrice), Number(form.creditMonths))
-    : 0;
-  const discountPreview = form.oldPrice && form.salePrice
-    ? Math.round((1 - Number(form.salePrice) / Number(form.oldPrice)) * 100)
-    : 0;
+  // Banner kartochkasini render qilish — har ikkala bo'limda ishlatiladi
+  const renderBannerCard = (banner) => (
+          <div key={banner.id} className={`card overflow-hidden ${!banner.active && 'opacity-60'}`}>
+            <div className="flex flex-col md:flex-row gap-3 p-3">
+              <div className="md:w-80 flex-shrink-0 space-y-2">
+                <div className="relative aspect-[1240/413] bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={resolveImage(banner.imageUz || banner.image)}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                  <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-green-600 text-white text-[10px] font-bold rounded shadow-sm">UZ</span>
+                  {!banner.active && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-medium">
+                        Yashirin
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="relative aspect-[1240/413] bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={resolveImage(banner.imageRu || banner.image)}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                  />
+                  <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-blue-600 text-white text-[10px] font-bold rounded shadow-sm">RU</span>
+                  {!banner.active && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-medium">
+                        Yashirin
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <LinkIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="font-medium text-gray-700">Yo'naltirish:</span>
+                </div>
+                <code className="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 truncate font-mono text-gray-800">
+                  {banner.link || '/'}
+                </code>
+              </div>
+              <div className="flex md:flex-col items-center md:items-stretch gap-2 md:gap-1.5 md:w-44">
+                <button
+                  onClick={() => toggleBannerActive(banner.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                    banner.active
+                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title={banner.active ? 'Yashirish' : "Ko'rsatish"}
+                >
+                  {banner.active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  {banner.active ? 'Faol' : 'Yashirin'}
+                </button>
+                <button
+                  onClick={() => openEdit(banner)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
+                  title="Rasmni almashtirish"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Almashtirish
+                </button>
+                <button
+                  onClick={() => handleDelete(banner.id)}
+                  className="py-2 px-3 rounded-md text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5"
+                  title="O'chirish"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="md:hidden lg:inline">O'chirish</span>
+                </button>
+              </div>
+            </div>
+          </div>
+  );
+
+  const homeBanners = banners.filter(b => (b.slot || 'home') === 'home');
+  const buBanners = banners.filter(b => b.slot === 'bu');
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            Reklama bannerlar
-            <span className="text-[10px] bg-accent-500 text-white px-2 py-0.5 rounded font-bold">SUPER</span>
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Bosh sahifa Hero karuselida ko'rsatiladi (har biri aniq mahsulot)
-          </p>
-        </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Yangi banner
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          Reklama bannerlar
+          <span className="text-[10px] bg-accent-500 text-white px-2 py-0.5 rounded font-bold">SUPER</span>
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Banner rasm o'lchami: <strong>1240×413</strong>
+        </p>
       </div>
 
       {error && (
@@ -124,104 +207,71 @@ export default function AdminBanners() {
         </div>
       )}
 
-      {/* Banners grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {banners.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500 card">
-            <ImageIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>Banner mavjud emas</p>
+      {/* 1-BO'LIM: Bosh sahifa karuseli */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between gap-3 mb-4 pb-2 border-b border-gray-200">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">🎠 Bosh sahifa karuseli</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Bir necha banner aylanib ko'rsatiladi</p>
           </div>
-        ) : banners.map(banner => {
-          const monthly = banner.creditMonths
-            ? calculateMonthly(banner.salePrice, banner.creditMonths)
-            : 0;
-          const discount = banner.oldPrice
-            ? Math.round((1 - banner.salePrice / banner.oldPrice) * 100)
-            : 0;
-
-          return (
-            <div key={banner.id} className={`card overflow-hidden ${!banner.active && 'opacity-60'}`}>
-              <div className="relative aspect-[4/3] bg-gradient-to-br from-primary-600 to-primary-900 overflow-hidden">
-                <img
-                  src={resolveImage(banner.image)}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => e.target.style.display = 'none'}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                {discount > 0 && (
-                  <div className="absolute top-3 left-3 bg-accent-500 text-white px-2 py-1 rounded-md font-bold text-xs shadow-lg">
-                    −{discount}%
-                  </div>
-                )}
-                {!banner.active && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-xs font-medium">
-                      Faol emas
-                    </span>
-                  </div>
-                )}
-                <div className="absolute bottom-2 left-2 right-2 text-white">
-                  <div className="text-sm font-semibold truncate">{banner.productName?.uz}</div>
-                </div>
-              </div>
-
-              <div className="p-3">
-                <div className="text-base font-bold text-gray-900 mb-0.5">
-                  {formatPrice(banner.salePrice)} so'm
-                </div>
-                {banner.oldPrice && (
-                  <div className="text-xs text-gray-400 line-through">
-                    {formatPrice(banner.oldPrice)} so'm
-                  </div>
-                )}
-                {monthly > 0 && (
-                  <div className="text-xs text-primary-600 mt-1 mb-2 flex items-center gap-1">
-                    <FluentEmoji name="card" size={12} /> {formatPrice(monthly)} so'm / {banner.creditMonths} oy
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1 mt-2">
-                  <button
-                    onClick={() => toggleBannerActive(banner.id)}
-                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      banner.active
-                        ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    title={banner.active ? "Yashirish" : "Ko'rsatish"}
-                  >
-                    {banner.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                    {banner.active ? 'Faol' : 'Yashirin'}
-                  </button>
-                  <button
-                    onClick={() => openEdit(banner)}
-                    className="p-1.5 text-gray-600 hover:bg-primary-50 hover:text-primary-700 rounded-md transition-colors"
-                    title="Tahrirlash"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(banner.id)}
-                    className="p-1.5 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors"
-                    title="O'chirish"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+          <button onClick={() => openAdd('home')} className="btn-primary flex items-center gap-2 text-sm">
+            <Plus className="w-4 h-4" />
+            Yangi karusel banner
+          </button>
+        </div>
+        <div className="space-y-3">
+          {homeBanners.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 card">
+              <ImageIcon className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">Karusel uchun banner yo'q</p>
             </div>
-          );
-        })}
-      </div>
+          ) : homeBanners.map(renderBannerCard)}
+        </div>
+      </section>
 
-      {/* Form modal */}
+      {/* 2-BO'LIM: B/U sahifa banneri (iPhone) */}
+      <section>
+        <div className="flex items-center justify-between gap-3 mb-4 pb-2 border-b border-gray-200">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-1.5">
+              <img src="https://cdn.simpleicons.org/apple/000000" alt="" className="w-5 h-5 object-contain" />
+              Foydalanilgan iPhone banneri
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              <code className="bg-gray-100 px-1 rounded">/b-u</code> sahifasi tepasida ko'rsatiladi (karusel emas — bitta rasm)
+            </p>
+          </div>
+          <button
+            onClick={() => openAdd('bu')}
+            disabled={buBanners.length >= 1}
+            className="btn-primary flex items-center gap-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            title={buBanners.length >= 1 ? 'B/U banneri allaqachon mavjud' : ''}
+          >
+            <Plus className="w-4 h-4" />
+            Yangi B/U banner
+          </button>
+        </div>
+        <div className="space-y-3">
+          {buBanners.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 card">
+              <ImageIcon className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm">B/U sahifa uchun banner yo'q</p>
+              <p className="text-[11px] text-gray-400 mt-1">Yuklamasangiz, /b-u sahifa eski hero ko'rinadi</p>
+            </div>
+          ) : buBanners.map(renderBannerCard)}
+        </div>
+      </section>
+
+      {/* Form modal — faqat rasm */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between z-10">
               <h2 className="text-lg font-bold">
-                {editingId ? 'Bannerni tahrirlash' : 'Yangi banner'}
+                {editingId ? 'Banner tahrirlash' : 'Yangi banner'}
+                <span className="ml-2 text-xs font-normal text-gray-500">
+                  ({form.slot === 'bu' ? 'B/U sahifa uchun' : 'Bosh karusel uchun'})
+                </span>
               </h2>
               <button onClick={closeForm} className="p-1.5 hover:bg-gray-100 rounded-lg">
                 <X className="w-5 h-5" />
@@ -229,156 +279,157 @@ export default function AdminBanners() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              {/* Rasm */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Mahsulot rasmi (PNG, shaffof fonli) *
-                </label>
-                <ImageUpload
-                  value={form.image}
-                  onChange={(img) => setForm({ ...form, image: img })}
-                  variant="banner"
-                />
-              </div>
-
-              {/* Mahsulot nomi */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Mahsulot nomi (UZ) *
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-green-100 text-green-700 text-[10px] font-bold">UZ</span>
+                    O'zbekcha rasm (1240×413) *
                   </label>
-                  <input
-                    required
-                    value={form.productName.uz}
-                    onChange={(e) => setForm({ ...form, productName: { ...form.productName, uz: e.target.value } })}
-                    placeholder="iPhone 17 Pro 256GB"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
+                  <ImageUpload
+                    value={form.imageUz}
+                    onChange={(img) => setForm({ ...form, imageUz: img })}
+                    variant="slide"
                   />
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    O'zbek tilidagi foydalanuvchilarga ko'rsatiladi
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Mahsulot nomi (RU) *
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-blue-100 text-blue-700 text-[10px] font-bold">RU</span>
+                    Ruscha rasm (1240×413) *
                   </label>
-                  <input
-                    required
-                    value={form.productName.ru}
-                    onChange={(e) => setForm({ ...form, productName: { ...form.productName, ru: e.target.value } })}
-                    placeholder="iPhone 17 Pro 256GB"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
+                  <ImageUpload
+                    value={form.imageRu}
+                    onChange={(img) => setForm({ ...form, imageRu: img })}
+                    variant="slide"
                   />
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    Rus tilidagi foydalanuvchilarga ko'rsatiladi
+                  </p>
                 </div>
               </div>
-
-              {/* Qisqa tasnif */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Qisqa tasnif (UZ)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={form.description?.uz || ''}
-                    onChange={(e) => setForm({ ...form, description: { ...form.description, uz: e.target.value } })}
-                    placeholder="Yangi flagman, A18 Pro chip, 48MP kamera"
-                    maxLength={120}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-none"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-0.5">Karuselda nomdan keyin ko'rinadi (max 120 belgi)</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Qisqa tasnif (RU)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={form.description?.ru || ''}
-                    onChange={(e) => setForm({ ...form, description: { ...form.description, ru: e.target.value } })}
-                    placeholder="Новый флагман, чип A18 Pro, 48MP камера"
-                    maxLength={120}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-none"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-0.5">В каруселе после названия (макс 120 знаков)</p>
-                </div>
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-800">
+                💡 Har bir banner uchun ikkala til uchun ham alohida rasm yuklang. Saytda tanlangan tilga mos rasm chiqadi.
               </div>
 
-              {/* Narxlar */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Eski narx (so'm)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.oldPrice}
-                    onChange={(e) => setForm({ ...form, oldPrice: e.target.value })}
-                    placeholder="16500000"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-0.5">Chegirma uchun (ixtiyoriy)</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Aksiya narxi (so'm) *
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    value={form.salePrice}
-                    onChange={(e) => setForm({ ...form, salePrice: e.target.value })}
-                    placeholder="14500000"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-0.5">Hozirgi sotuv narxi</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Muddatli to'lov (oy) *
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    min="1"
-                    max="36"
-                    value={form.creditMonths}
-                    onChange={(e) => setForm({ ...form, creditMonths: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-0.5">Misol: 12 oy</p>
-                </div>
-              </div>
+              {/* Bosilganda yo'naltirish */}
+              {(() => {
+                const catMatch = form.link?.match(/[?&]category=([^&]+)/);
+                const subMatch = form.link?.match(/[?&]subcategory=([^&]+)/);
+                const selectedCatId = catMatch ? catMatch[1] : '';
+                const selectedSubId = subMatch ? subMatch[1] : '';
+                const selectedCat = allCategories.find(c => c.id === selectedCatId);
+                const isHome = form.link === '/';
+                const isCatalog = form.link === '/catalog';
 
-              {/* Preview */}
-              {form.salePrice && form.creditMonths && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-                  <div className="text-xs text-blue-700 font-medium mb-1">Avto-hisoblangan:</div>
-                  <div className="space-y-0.5 text-blue-900">
-                    {discountPreview > 0 && (
-                      <div className="flex items-center gap-1.5"><FluentEmoji name="fire" size={14} /> Chegirma: <strong>−{discountPreview}%</strong></div>
+                return (
+                  <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <label className="block text-sm font-semibold text-gray-700">
+                      Bosilganda yo'naltirish *
+                    </label>
+
+                    {/* 1-qator: Bosh sahifa va Katalog */}
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, link: '/' })}
+                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                          isHome
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-primary-50 hover:border-primary-400'
+                        }`}
+                      >
+                        🏠 Bosh sahifa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, link: '/catalog' })}
+                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                          isCatalog
+                            ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                            : 'bg-white border-gray-300 text-gray-700 hover:bg-primary-50 hover:border-primary-400'
+                        }`}
+                      >
+                        📦 Katalog
+                      </button>
+                    </div>
+
+                    {/* 2-qator: Kategoriya dropdown */}
+                    <div>
+                      <div className="text-[11px] text-gray-500 mb-1.5 font-medium">Kategoriya:</div>
+                      <select
+                        value={selectedCatId}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v) {
+                            // Yangi kategoriya tanlandi → subkategoriya bekor qilinadi
+                            setForm({ ...form, link: `/catalog?category=${v}` });
+                          } else {
+                            setForm({ ...form, link: '/catalog' });
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary-500"
+                      >
+                        <option value="">— tanlash —</option>
+                        {allCategories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name.uz} / {cat.name.ru}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 3-qator: Subkategoriya dropdown — faqat kategoriya tanlanganda */}
+                    {selectedCat && selectedCat.subcategories.length > 0 && (
+                      <div>
+                        <div className="text-[11px] text-gray-500 mb-1.5 font-medium">
+                          Subkategoriya <span className="text-gray-400">({selectedCat.name.uz} ichida)</span>:
+                        </div>
+                        <select
+                          value={selectedSubId}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v) {
+                              setForm({ ...form, link: `/catalog?category=${selectedCatId}&subcategory=${v}` });
+                            } else {
+                              // Subkategoriya tozalandi → faqat kategoriya
+                              setForm({ ...form, link: `/catalog?category=${selectedCatId}` });
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">— barchasi —</option>
+                          {selectedCat.subcategories.map((sub) => (
+                            <option key={sub.id} value={sub.id}>
+                              {sub.name.uz} / {sub.name.ru}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     )}
-                    <div className="flex items-center gap-1.5"><FluentEmoji name="card" size={14} /> Oylik to'lov: <strong>{formatPrice(monthlyPreview)} so'm / {form.creditMonths} oy</strong></div>
+
+                    {/* 4-qator: Custom havola */}
+                    <div>
+                      <div className="text-[11px] text-gray-500 mb-1.5 font-medium">Yoki to'g'ridan havola yozing:</div>
+                      <input
+                        required
+                        type="text"
+                        value={form.link}
+                        onChange={(e) => setForm({ ...form, link: e.target.value })}
+                        placeholder="/catalog?category=large-appliances yoki https://t.me/..."
+                        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:border-primary-500"
+                      />
+                    </div>
+
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      💡 Yuqoridan tanlasangiz pastdagi havola avtomatik to'ldiriladi. Tashqi sayt uchun <code className="bg-white px-1 rounded border">https://...</code> formatda yozing.
+                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {/* Havola */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Bosilganda havola
-                </label>
-                <input
-                  value={form.link}
-                  onChange={(e) => setForm({ ...form, link: e.target.value })}
-                  placeholder="/catalog?subcategory=ac"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                />
-                <p className="text-[10px] text-gray-500 mt-0.5">
-                  Mijoz "Sotib olish" tugmasini bosganda qaerga olib boradi
-                </p>
-              </div>
-
-              <label className="flex items-center gap-2 text-sm">
+              <label className="flex items-center gap-2 text-sm select-none">
                 <input
                   type="checkbox"
                   checked={form.active}
@@ -397,7 +448,7 @@ export default function AdminBanners() {
                 <button type="button" onClick={closeForm} disabled={submitting} className="btn-secondary flex-1 disabled:opacity-50">
                   Bekor qilish
                 </button>
-                <button type="submit" disabled={submitting} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
+                <button type="submit" disabled={submitting || !form.imageUz || !form.imageRu} className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
                   <Save className="w-4 h-4" />
                   {submitting ? 'Saqlanmoqda...' : 'Saqlash'}
                 </button>

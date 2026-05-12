@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { bannersApi, pickupPointsApi, productsApi, resolveImage, storesApi } from '../api/client';
+import { categories as allCategories } from '../data/products';
 
 const AdminDataContext = createContext();
 
@@ -139,11 +140,26 @@ export const AdminDataProvider = ({ children }) => {
     setPickupPoints(prev => prev.filter(p => p.id !== id));
   };
 
+  // Mahsulot bor kategoriya va subkategoriyalar — sidebar va header navigatsiya
+  // bo'sh bo'limlarni ko'rsatmasligi uchun
+  const visibleCategories = useMemo(() => {
+    const inStock = products.filter(p => p.stock > 0);
+    return allCategories.map(cat => {
+      const catProducts = inStock.filter(p => p.category === cat.id);
+      if (catProducts.length === 0) return null;
+      const visibleSubs = cat.subcategories.filter(sub =>
+        catProducts.some(p => p.subcategory === sub.id)
+      );
+      return { ...cat, subcategories: visibleSubs };
+    }).filter(Boolean);
+  }, [products]);
+
   const value = useMemo(() => ({
     products,
     banners,
     pickupPoints,
     stores,
+    visibleCategories,
     activeBanners: banners.filter(b => b.active),
     activePickupPoints: pickupPoints.filter(p => p.active),
     activeStores: stores.filter(s => s.active),
@@ -167,7 +183,7 @@ export const AdminDataProvider = ({ children }) => {
     addStore,
     updateStore,
     deleteStore,
-  }), [products, banners, pickupPoints, stores, loading, error, refresh]);
+  }), [products, banners, pickupPoints, stores, visibleCategories, loading, error, refresh]);
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;
 };

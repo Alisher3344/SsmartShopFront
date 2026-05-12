@@ -150,10 +150,6 @@ export default function ProductPage() {
             {product.name[lang]}
           </h1>
 
-          <p className="text-gray-600 mb-6">
-            {product.description[lang]}
-          </p>
-
           {/* B/U holat banner — subkategoriyaga qarab rang va harf */}
           {isUsed && (usedSub || conditionNote) && (
             <div className={`mb-6 rounded-xl border-2 p-5 ${usedStyle?.container || 'border-gray-300 bg-gray-50'}`}>
@@ -241,6 +237,21 @@ export default function ProductPage() {
             </button>
           </div>
 
+          {/* Umumiy tavsif (narx va savat tugmasidan keyin) */}
+          {product.description?.[lang] && (
+            <div className="card p-5 mb-4">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                {lang === 'uz' ? 'Umumiy tavsif' : 'Общее описание'}
+              </h3>
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {product.description[lang]}
+              </p>
+            </div>
+          )}
+
+          {/* Xususiyatlar (specifications) */}
+          <SpecificationsTable specifications={product.specifications} lang={lang} />
+
           {/* Benefits */}
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm">
@@ -276,6 +287,46 @@ export default function ProductPage() {
 
       {/* Sharhlar bo'limi */}
       <ProductReviews productId={product.id} />
+    </div>
+  );
+}
+
+function SpecificationsTable({ specifications, lang }) {
+  if (!specifications || specifications.length === 0) return null;
+
+  const pick = (s) => {
+    const v1 = lang === 'uz' ? (s.valueUz ?? s.value_uz ?? '') : (s.valueRu ?? s.value_ru ?? '');
+    const isDual = Boolean(s.isDual ?? s.is_dual ?? false);
+    const v2 = lang === 'uz' ? (s.value2Uz ?? s.value2_uz ?? '') : (s.value2Ru ?? s.value2_ru ?? '');
+    return { v1, v2, isDual };
+  };
+
+  return (
+    <div className="card p-5 mb-6">
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">
+        {lang === 'uz' ? 'Xususiyatlar' : 'Характеристики'}
+      </h3>
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-gray-100">
+          {specifications.map((s, idx) => {
+            const { v1, v2, isDual } = pick(s);
+            if (!v1 && !v2) return null;
+            return (
+              <tr key={idx}>
+                {isDual ? (
+                  <td className="py-2 text-gray-900">
+                    <span className="text-gray-500">{v1}</span>
+                    <span className="text-gray-400 font-mono mx-2">———</span>
+                    <span className="font-medium">{v2}</span>
+                  </td>
+                ) : (
+                  <td className="py-2 text-gray-900">{v1}</td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -47,7 +47,7 @@
     @apply bg-white rounded-xl border border-gray-100 shadow-sm;
   }
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
 

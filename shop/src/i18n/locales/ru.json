@@ -7,7 +7,15 @@
     "profile": "Кабинет",
     "search": "Поиск товаров...",
     "categories": "Категории",
-    "allCategories": "Все категории"
+    "allCategories": "Все категории",
+    "bu": "Подержанные iPhone"
+  },
+  "bu": {
+    "title": "Подержанные iPhone",
+    "subtitle": "Проверенные подержанные iPhone — дёшево и надёжно",
+    "allProducts": "Все подержанные iPhone",
+    "empty": "Пока нет подержанных iPhone",
+    "emptyDesc": "Скоро здесь появятся подержанные iPhone"
   },
   "hero": {
     "title": "Smart - ваш надёжный магазин",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, Tag, X, Save } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Tag, X, Save, ListPlus } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { categories, formatPrice } from '../../data/products';
@@ -23,7 +23,24 @@ const EMPTY_PRODUCT = {
   creditMonths: 12,
   badges: [],
   isPopular: false,
+  specifications: [],
 };
+
+const EMPTY_SPEC = {
+  valueUz: '',
+  valueRu: '',
+  isDual: false,
+  value2Uz: '',
+  value2Ru: '',
+};
+
+const normalizeSpec = (s) => ({
+  valueUz: s.valueUz ?? s.value_uz ?? '',
+  valueRu: s.valueRu ?? s.value_ru ?? '',
+  isDual: Boolean(s.isDual ?? s.is_dual ?? false),
+  value2Uz: s.value2Uz ?? s.value2_uz ?? '',
+  value2Ru: s.value2Ru ?? s.value2_ru ?? '',
+});
 
 export default function AdminProducts() {
   const { products, stores, addProduct, updateProduct, deleteProduct, toggleSale, loading, error } = useAdminData();
@@ -36,6 +53,7 @@ export default function AdminProducts() {
   const [form, setForm] = useState(EMPTY_PRODUCT);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [formLang, setFormLang] = useState('uz');
 
   // Staff (magazin admin): faqat o'z magazinining mahsulotlari
   // Admin (sotuv admin): faqat magazinga bog'lanmagan (default) mahsulotlar
@@ -69,6 +87,7 @@ export default function AdminProducts() {
       conditionNote: product.conditionNote || '',
       storeId: product.storeId ?? product.store_id ?? null,
       store_id: product.storeId ?? product.store_id ?? null,
+      specifications: (product.specifications || []).map(normalizeSpec),
     });
     setShowForm(true);
   };
@@ -85,6 +104,16 @@ export default function AdminProducts() {
     const allImages = (form.images && form.images.length > 0)
       ? form.images
       : (form.image ? [form.image] : []);
+    const cleanedSpecs = (form.specifications || [])
+      .map(normalizeSpec)
+      .filter(s => s.valueUz.trim() || s.valueRu.trim() || s.value2Uz.trim() || s.value2Ru.trim())
+      .map(s => ({
+        valueUz: s.valueUz.trim(),
+        valueRu: s.valueRu.trim(),
+        isDual: s.isDual,
+        value2Uz: s.isDual ? s.value2Uz.trim() : null,
+        value2Ru: s.isDual ? s.value2Ru.trim() : null,
+      }));
     const productData = {
       name: form.name,
       description: form.description,
@@ -100,6 +129,7 @@ export default function AdminProducts() {
       rating: Number(form.rating) || 4.5,
       creditMonths: Number(form.creditMonths) || 12,
       onSale: form.onSale || false,
+      specifications: cleanedSpecs,
     };
     // Super admin magazin tanlagan bo'lsa — yuboramiz (NULL ham mumkin)
     // Sotuv admin (admin) — magazinga bog'lanmagan default
@@ -124,7 +154,24 @@ export default function AdminProducts() {
     }
   };
 
-  // Badge tanlash/olib tashlash (faqat super admin)
+  const addSpec = () => {
+    setForm(prev => ({ ...prev, specifications: [...(prev.specifications || []), { ...EMPTY_SPEC }] }));
+  };
+
+  const updateSpec = (idx, patch) => {
+    setForm(prev => ({
+      ...prev,
+      specifications: (prev.specifications || []).map((s, i) => i === idx ? { ...s, ...patch } : s),
+    }));
+  };
+
+  const removeSpec = (idx) => {
+    setForm(prev => ({
+      ...prev,
+      specifications: (prev.specifications || []).filter((_, i) => i !== idx),
+    }));
+  };
+
   const toggleBadge = (badgeId) => {
     setForm(prev => {
       const current = prev.badges || [];
@@ -327,30 +374,39 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Tavsif (UZ)
+              {/* Umumiy tavsif (UZ/RU toggle) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5 gap-3 flex-wrap">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Umumiy tavsif <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
                   </label>
-                  <textarea
-                    rows={2}
-                    value={form.description.uz}
-                    onChange={(e) => setForm({ ...form, description: { ...form.description, uz: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-none"
-                  />
+                  <div className="inline-flex bg-gray-100 rounded-lg p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setFormLang('uz')}
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${formLang === 'uz' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      O'zbekcha
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormLang('ru')}
+                      className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${formLang === 'ru' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                    >
+                      Русский
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Tavsif (RU)
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={form.description.ru}
-                    onChange={(e) => setForm({ ...form, description: { ...form.description, ru: e.target.value } })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-none"
-                  />
-                </div>
+                <textarea
+                  rows={3}
+                  value={formLang === 'uz' ? (form.description?.uz || '') : (form.description?.ru || '')}
+                  onChange={(e) => setForm({
+                    ...form,
+                    description: { ...form.description, [formLang]: e.target.value },
+                  })}
+                  placeholder={formLang === 'uz' ? "Mahsulot holati haqida qo'shimcha ma'lumot..." : 'Дополнительная информация о состоянии товара...'}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-y"
+                />
               </div>
 
               {/* Category + Subcategory */}
@@ -574,6 +630,117 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+
+              {/* Tasniflar (specifications) */}
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Tasniflar (xususiyatlar)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addSpec}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-md"
+                  >
+                    <ListPlus className="w-3.5 h-3.5" />
+                    Tasnif qo'shish
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  "Dual" katakchasi bosilganda har bir tilda 2 ta input chiqadi (chap = nom, o'ng = qiymat),
+                  va mahsulot sahifasida <span className="font-mono">"nom ——— qiymat"</span> ko'rinishida chiqadi.
+                </p>
+
+                {(form.specifications || []).length === 0 ? (
+                  <div className="p-3 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-center text-xs text-gray-500">
+                    Hozircha tasniflar yo'q. "Tasnif qo'shish" tugmasini bosing.
+                  </div>
+                ) : (
+                  <div>
+                    <div className="inline-flex bg-gray-100 rounded-lg p-0.5 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormLang('uz')}
+                        className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${formLang === 'uz' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        O'zbekcha
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormLang('ru')}
+                        className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${formLang === 'ru' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                      >
+                        Русский
+                      </button>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-xs text-gray-500 border-b border-gray-100">
+                          <th className="text-center px-2 py-2 font-medium w-16">Dual</th>
+                          <th className="text-left px-2 py-2 font-medium">{formLang === 'uz' ? "O'zbekcha" : 'Ruscha'}</th>
+                          <th className="px-2 py-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {(form.specifications || []).map((spec, idx) => {
+                          const valKey = formLang === 'uz' ? 'valueUz' : 'valueRu';
+                          const val2Key = formLang === 'uz' ? 'value2Uz' : 'value2Ru';
+                          const ph1 = formLang === 'uz'
+                            ? (spec.isDual ? 'masalan: protsessor' : 'masalan: Intel i3')
+                            : (spec.isDual ? 'например: процессор' : 'например: Intel i3');
+                          const ph2 = formLang === 'uz' ? 'masalan: Intel i3' : 'например: Intel i3';
+                          return (
+                            <tr key={idx}>
+                              <td className="px-2 py-2 text-center align-middle">
+                                <input
+                                  type="checkbox"
+                                  checked={spec.isDual}
+                                  onChange={(e) => updateSpec(idx, { isDual: e.target.checked })}
+                                  className="w-4 h-4 accent-primary-600 cursor-pointer"
+                                  title="Dual rejimi (nom + qiymat)"
+                                />
+                              </td>
+                              <td className="px-2 py-2 align-middle">
+                                <div className="flex items-center gap-1.5">
+                                  <input
+                                    type="text"
+                                    value={spec[valKey] || ''}
+                                    onChange={(e) => updateSpec(idx, { [valKey]: e.target.value })}
+                                    placeholder={ph1}
+                                    className="flex-1 min-w-0 px-2 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:border-primary-500 text-sm"
+                                  />
+                                  {spec.isDual && (
+                                    <>
+                                      <span className="text-gray-400 select-none font-mono text-xs">———</span>
+                                      <input
+                                        type="text"
+                                        value={spec[val2Key] || ''}
+                                        onChange={(e) => updateSpec(idx, { [val2Key]: e.target.value })}
+                                        placeholder={ph2}
+                                        className="flex-1 min-w-0 px-2 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:border-primary-500 text-sm"
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2 text-center align-middle">
+                                <button
+                                  type="button"
+                                  onClick={() => removeSpec(idx)}
+                                  className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                  title="Qatorni o'chirish"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
 
               {/* Yorliqlar (badges) — har ikkala admin uchun */}
               <div className="border-t border-gray-100 pt-4">

@@ -29,11 +29,12 @@ function AdminLayoutInner() {
   const navItems = [
     // Faqat superadmin
     { to: '/Tty0xssmart', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
-    // Mahsulotlar — sotuv admin (admin) va staff (magazin admin)
-    { to: '/Tty0xssmart/products', label: 'Mahsulotlar', icon: Package, roles: ['admin', 'staff'] },
-    { to: '/Tty0xssmart/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['admin', 'staff'] },
+    // Mahsulotlar — barcha admin rollar (superadmin, sotuv admin, staff)
+    { to: '/Tty0xssmart/products', label: 'Mahsulotlar', icon: Package, roles: ['superadmin', 'admin', 'staff'] },
+    { to: '/Tty0xssmart/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['superadmin', 'admin', 'staff'] },
     { to: '/Tty0xssmart/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['admin', 'staff'] },
+    // Buyurtmalar — barcha admin rollar
+    { to: '/Tty0xssmart/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['superadmin', 'admin', 'staff'] },
     // Faqat staff (magazin admin) — o'z magazinining statistikasi
     { to: '/Tty0xssmart/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
     // Faqat superadmin

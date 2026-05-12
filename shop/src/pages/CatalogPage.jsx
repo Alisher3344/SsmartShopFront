@@ -4,13 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { Search, SlidersHorizontal, ChevronRight, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import FluentEmoji from '../components/FluentEmoji';
-import { categories, findCategoryById, findSubcategoryById } from '../data/products';
+import { findCategoryById, findSubcategoryById } from '../data/products';
 import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import { useAdminData } from '../context/AdminDataContext';
 
 export default function CatalogPage() {
   const { t, i18n } = useTranslation();
-  const { products, loading } = useAdminData();
+  const { products, loading, visibleCategories } = useAdminData();
+  // Sidebar uchun: faqat mahsulot bor kategoriyalar
+  const categories = visibleCategories;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initCategory = searchParams.get('category') || 'all';
@@ -82,7 +84,7 @@ export default function CatalogPage() {
   };
 
   return (
-    <div className="container-custom py-6 animate-fade-in">
+    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
       {/* Breadcrumbs */}
       <div className="flex items-center gap-1 text-sm text-gray-500 mb-4 overflow-x-auto pb-1">
         <Link to="/" className="hover:text-primary-600 whitespace-nowrap">{t('nav.home')}</Link>
@@ -113,7 +115,7 @@ export default function CatalogPage() {
         {filtered.length} {t('products.items')}
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
         {/* Sidebar - desktop */}
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-4">
@@ -296,9 +298,9 @@ export default function CatalogPage() {
               <p className="text-sm">{t('products.notFoundDesc')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
               {filtered.map(product => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} variant="catalog" />
               ))}
             </div>
           )}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from '../components/ProductCard';
@@ -6,10 +7,15 @@ import { useAdminData } from '../context/AdminDataContext';
 import MIcon from '../components/MIcon';
 import FluentEmoji from '../components/FluentEmoji';
 
+// Grid: xl=5 ustun, lg=4, md=3, mobile=2. 4 qator xl'da = 20 ta mahsulot.
+const INITIAL_COUNT = 20;
+const STEP = 10; // xl'da 5 × 2 = 10 (2 qator)
+
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const { products, saleProducts } = useAdminData();
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
   // Faqat zaxirada bor mahsulotlar
   const inStockProducts = products.filter((p) => p.stock > 0);
@@ -25,6 +31,13 @@ export default function HomePage() {
   const discountProducts = inStockProducts
     .filter(p => p.onSale)
     .slice(0, 8);
+
+  // 3-bo'lim — ommabop yoki chegirmali bo'limda chiqqan mahsulotlarni qaytarmaymiz
+  const usedIds = new Set([
+    ...popularProducts.map(p => p.id),
+    ...discountProducts.map(p => p.id),
+  ]);
+  const otherProducts = inStockProducts.filter(p => !usedIds.has(p.id));
 
   const features = [
     { icon: 'local_shipping', title: { uz: "Tez yetkazib berish", ru: "Быстрая доставка" }, desc: { uz: "1-3 kun ichida", ru: "За 1-3 дня" } },
@@ -66,7 +79,7 @@ export default function HomePage() {
               {t('products.details')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
             {popularProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -85,11 +98,35 @@ export default function HomePage() {
               {t('common.showAll')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
             {discountProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Barcha mahsulotlar — nomsiz, ko'rib chiqish bilan
+          (ommabop/chegirmali bo'limda bo'lganlari chiqarilmaydi) */}
+      {otherProducts.length > 0 && (
+        <section className="container-custom py-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+            {otherProducts.slice(0, visibleCount).map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          {visibleCount < otherProducts.length && (
+            <div className="flex justify-center mt-8">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((c) => c + STEP)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-600 text-primary-600 font-semibold rounded-full hover:bg-primary-600 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                {lang === 'ru' ? 'Показать ещё' : "Yana ko'rish"}
+                <MIcon name="expand_more" size={20} />
+              </button>
+            </div>
+          )}
         </section>
       )}
     </div>

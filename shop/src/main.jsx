@@ -11,10 +11,12 @@ createRoot(document.getElementById('root')).render(
 );
 
 // PWA Service Worker registratsiyasi
+// Versiyalangan URL — Cloudflare/CDN cache'ni chetlab o'tish uchun
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Service worker yo'q bo'lsa - hech narsa qilmaymiz
-    });
+    navigator.serviceWorker.register('/sw.js?v=3').then((reg) => {
+      // Yangi versiya kelganda darrov o'tkazamiz
+      reg.update().catch(() => {});
+    }).catch(() => {});
   });
 }

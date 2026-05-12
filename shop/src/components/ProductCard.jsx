@@ -8,7 +8,15 @@ import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import MIcon from './MIcon';
 import FluentEmoji from './FluentEmoji';
 
-export default function ProductCard({ product }) {
+// Variant — card o'lchamlarini sahifaga moslab beradi:
+//   home    → 232×465 (rasm 232×309)  [bosh sahifa]
+//   catalog → 215×443 (rasm 215×287)  [katalog]
+const CARD_VARIANTS = {
+  home:    { maxW: 'max-w-[232px]' },
+  catalog: { maxW: 'max-w-[245px]' },
+};
+
+export default function ProductCard({ product, variant = 'home' }) {
   const { t, i18n } = useTranslation();
   const { addToCart, isInCart, toggleFavorite, isFavorite } = useShop();
   const { requireAuth } = useAuthGate();
@@ -34,8 +42,10 @@ export default function ProductCard({ product }) {
     ? USED_GRADE_STYLES[product.subcategory]
     : null;
 
+  const cfg = CARD_VARIANTS[variant] || CARD_VARIANTS.home;
+
   return (
-    <div className="card group overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full">
+    <div className={`card group overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full w-full ${cfg.maxW} mx-auto`}>
       {/* Image */}
       <div className="relative aspect-[3/4] bg-gray-50 overflow-hidden flex-shrink-0">
         <Link to={`/product/${product.id}`} className="block w-full h-full">
@@ -94,57 +104,57 @@ export default function ProductCard({ product }) {
         </button>
       </div>
 
-      {/* Content - flex-col with fixed sections */}
-      <div className="p-3 flex flex-col flex-1">
-        {/* Nom - har doim 2 qator joy egallaydi */}
-        <Link to={`/product/${product.id}`} className="block mb-1.5">
-          <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[40px] hover:text-primary-600 transition-colors leading-5">
+      {/* Content - kompakt */}
+      <div className="p-2.5 flex flex-col flex-1">
+        {/* Nom - 2 qator joy */}
+        <Link to={`/product/${product.id}`} className="block mb-1">
+          <h3 className="text-[13px] font-medium text-gray-900 line-clamp-2 min-h-[36px] hover:text-primary-600 transition-colors leading-[18px]">
             {product.name[lang]}
           </h3>
         </Link>
 
         {/* Reyting yoki "Yangi mahsulot" */}
-        <div className="mb-2 h-5 flex items-center">
+        <div className="mb-1.5 h-4 flex items-center">
           {product.reviewsCount > 0 ? (
             <div className="flex items-center gap-1">
-              <MIcon name="star" size={14} fill className="text-yellow-400" />
-              <span className="text-xs font-medium text-gray-900">
+              <MIcon name="star" size={12} fill className="text-yellow-400" />
+              <span className="text-[11px] font-medium text-gray-900">
                 {Number(product.avgRating).toFixed(1)}
               </span>
               <span className="text-[10px] text-gray-400">({product.reviewsCount})</span>
             </div>
           ) : (
-            <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">
-              Yangi mahsulot
+            <span className="text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded font-medium">
+              {lang === 'ru' ? 'Новый' : 'Yangi'}
             </span>
           )}
         </div>
 
         {/* Narx bloki - har doim bir xil balandlikda */}
-        <div className="mb-3">
+        <div className="mb-2">
           {/* Asosiy narx */}
-          <div className="text-base font-bold text-gray-900 mb-0.5">
+          <div className="text-[15px] font-bold text-gray-900 leading-tight">
             {formatPrice(product.price)} {t('common.currency')}
           </div>
 
-          {/* Eski narx - har doim joy egallaydi (bo'sh bo'lsa ham) */}
-          <div className="text-xs text-gray-400 line-through h-4">
+          {/* Eski narx - har doim joy egallaydi */}
+          <div className="text-[11px] text-gray-400 line-through h-4 leading-4">
             {product.oldPrice ? `${formatPrice(product.oldPrice)} ${t('common.currency')}` : ''}
           </div>
 
-          {/* Oylik to'lov - har doim joy egallaydi */}
-          <div className="text-xs text-primary-600 mt-1 h-4">
+          {/* Oylik to'lov */}
+          <div className="text-[11px] text-primary-600 h-4 leading-4">
             {product.creditMonths > 0
               ? `${formatPrice(calculateMonthly(product.price, product.creditMonths))} ${t('common.currency')}${t('products.perMonth')}`
               : ''}
           </div>
         </div>
 
-        {/* Tugma - har doim pastda turadi */}
+        {/* Tugma - pastda */}
         <button
           onClick={handleAddToCart}
           disabled={inCart}
-          className={`mt-auto w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`mt-auto w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
             inCart
               ? 'bg-green-50 text-green-700 border border-green-200'
               : 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
@@ -152,12 +162,12 @@ export default function ProductCard({ product }) {
         >
           {inCart ? (
             <>
-              <MIcon name="check" size={16} />
+              <MIcon name="check" size={14} />
               {t('products.inCart')}
             </>
           ) : (
             <>
-              <MIcon name="shopping_cart" size={16} />
+              <MIcon name="shopping_cart" size={14} />
               {t('products.addToCart')}
             </>
           )}

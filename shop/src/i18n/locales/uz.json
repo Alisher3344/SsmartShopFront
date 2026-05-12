@@ -7,7 +7,15 @@
     "profile": "Kabinet",
     "search": "Mahsulot qidirish...",
     "categories": "Kategoriyalar",
-    "allCategories": "Barcha toifalar"
+    "allCategories": "Barcha toifalar",
+    "bu": "Foydalanilgan iPhone"
+  },
+  "bu": {
+    "title": "Foydalanilgan iPhone",
+    "subtitle": "Tekshirilgan ishlatilgan iPhone'lar — arzon va ishonchli",
+    "allProducts": "Barcha foydalanilgan iPhone'lar",
+    "empty": "Hozircha foydalanilgan iPhone'lar yo'q",
+    "emptyDesc": "Tez orada bu yerda ishlatilgan iPhone'lar paydo bo'ladi"
   },
   "hero": {
     "title": "Smart - sizning ishonchli do'koningiz",
