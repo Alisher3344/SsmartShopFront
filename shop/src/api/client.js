@@ -82,14 +82,16 @@ function extractErrorMessage(payload, fallback = 'Request failed') {
 
 // ===== AUTH =====
 export const authApi = {
-  // login - username yoki email
+  // login - username yoki email (admin)
   login: (login, password) =>
     request('/users/login', { method: 'POST', body: { login, password } }),
   me: () => request('/users/me'),
-  // Telegram bot orqali OTP login (asosiy)
-  telegramOtpStart: () => request('/users/telegram-otp/start', { method: 'POST' }),
-  telegramOtpStatus: (token) => request(`/users/telegram-otp/status?token=${encodeURIComponent(token)}`),
-  telegramOtpVerify: (token, code) => request('/users/telegram-otp/verify', { method: 'POST', body: { token, code } }),
+  // SMS OTP login (foydalanuvchi)
+  // phone — xalqaro format raqamlari, prefiksiz: "998901234567"
+  smsOtpRequest: (phone) =>
+    request('/users/sms-otp/request', { method: 'POST', body: { phone } }),
+  smsOtpVerify: (phone, code) =>
+    request('/users/sms-otp/verify', { method: 'POST', body: { phone, code } }),
 };
 
 // ===== PRODUCTS =====

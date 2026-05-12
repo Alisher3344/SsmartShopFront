@@ -1,41 +1,48 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, MessageCircle, Send, AlertTriangle, ArrowLeft, ExternalLink, CheckCircle2 } from 'lucide-react';
+import { X, Phone, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { authApi } from '../api/client';
 
-/**
- * Login modal: SMS yoki Telegram orqali kirish.
- * Telegram flow:
- *   1. Backend AuthSession yaratadi va t.me/BOT?start=TOKEN linkini qaytaradi
- *   2. Foydalanuvchi linkga o'tib, botda "Telefonni yuborish" bosadi
- *   3. Bot 6 xonali kod yuboradi
- *   4. Foydalanuvchi kodni shu modalga kiritadi
- *   5. Backend kodni tekshirib, JWT qaytaradi
- */
+// Telefon raqamini formatlash: foydalanuvchi kiritgan raqamlarni
+// "+998 (90) 123-45-67" ko'rinishida ko'rsatamiz.
+// Ichkarida faqat "998..." dan keyingi 9 ta raqamni saqlaymiz.
+const formatPhone = (digits) => {
+  const d = (digits || '').replace(/\D/g, '').slice(0, 9);
+  if (d.length === 0) return '+998 ';
+  if (d.length <= 2) return `+998 (${d}`;
+  if (d.length <= 5) return `+998 (${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 7) return `+998 (${d.slice(0, 2)}) ${d.slice(2, 5)}-${d.slice(5)}`;
+  return `+998 (${d.slice(0, 2)}) ${d.slice(2, 5)}-${d.slice(5, 7)}-${d.slice(7, 9)}`;
+};
+
+const RESEND_SECONDS = 60;
+
 export default function LoginModal({ open, onClose, onSuccess }) {
-  const [step, setStep] = useState('select'); // select | sms-error | tg-link | tg-code
-  const [error, setError] = useState('');
+  const [step, setStep] = useState('phone'); // 'phone' | 'code'
+  const [phoneDigits, setPhoneDigits] = useState(''); // 998 dan keyingi 9 raqam
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [resendIn, setResendIn] = useState(0);
+  const codeInputRef = useRef(null);
+  const timerRef = useRef(null);
 
-  // Telegram OTP holati
-  const [tgToken, setTgToken] = useState('');
-  const [tgBotLink, setTgBotLink] = useState('');
-  const [tgStatus, setTgStatus] = useState('pending'); // pending | code_sent | verified | expired
-  const [otp, setOtp] = useState('');
-  const pollRef = useRef(null);
-
+  // Modal yopilganda holatni tozalaymiz
   useEffect(() => {
     if (!open) {
-      setStep('select');
-      setError('');
+      setStep('phone');
+      setPhoneDigits('');
+      setCode('');
       setLoading(false);
-      setTgToken('');
-      setTgBotLink('');
-      setTgStatus('pending');
-      setOtp('');
-      stopPolling();
+      setError('');
+      setResendIn(0);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
   }, [open]);
 
+  // Esc bilan yopish
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -43,44 +50,54 @@ export default function LoginModal({ open, onClose, onSuccess }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const stopPolling = () => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
+  // Code stepga o'tilganda inputga focus
+  useEffect(() => {
+    if (step === 'code' && codeInputRef.current) {
+      codeInputRef.current.focus();
     }
-  };
+  }, [step]);
 
-  // Status polling — bot kod yuborganini avtomatik bilish uchun
-  const startPolling = (token) => {
-    stopPolling();
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await authApi.telegramOtpStatus(token);
-        setTgStatus(res.status);
-        if (res.status === 'code_sent') {
-          stopPolling();
-        } else if (res.status === 'expired') {
-          stopPolling();
-          setError('Login sessiyasi muddati tugadi. Qaytadan boshlang.');
+  const startResendTimer = () => {
+    setResendIn(RESEND_SECONDS);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setResendIn((s) => {
+        if (s <= 1) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+          return 0;
         }
-      } catch {
-        // jim - keyingi pollda qayta urinadi
-      }
-    }, 2500);
+        return s - 1;
+      });
+    }, 1000);
   };
 
-  // Telegram step: sessiya yaratish
-  const startTelegramFlow = async () => {
-    setLoading(true);
+  const fullPhone = `998${phoneDigits}`; // backend uchun: 12 ta raqam
+
+  const handlePhoneChange = (e) => {
+    // Foydalanuvchi nima yozsa ham — faqat raqamlar qoladi.
+    // "+998 " prefiks bo'lgani uchun, foydalanuvchi kiritgan matndan
+    // dastlabki "998" ni olib tashlaymiz (agar mavjud bo'lsa).
+    let raw = e.target.value.replace(/\D/g, '');
+    if (raw.startsWith('998')) raw = raw.slice(3);
+    setPhoneDigits(raw.slice(0, 9));
+  };
+
+  const requestCode = async (e) => {
+    e?.preventDefault();
     setError('');
+    if (phoneDigits.length !== 9) {
+      setError("Telefon raqamni to'liq kiriting");
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await authApi.telegramOtpStart();
-      setTgToken(res.token);
-      setTgBotLink(res.bot_link);
-      setStep('tg-link');
-      startPolling(res.token);
+      await authApi.smsOtpRequest(fullPhone);
+      setStep('code');
+      setCode('');
+      startResendTimer();
     } catch (e) {
-      setError(e.message || "Telegram bot ishga tushmagan. Adminga murojaat qiling.");
+      setError(e.message || "SMS yuborib bo'lmadi. Birozdan keyin urinib ko'ring.");
     } finally {
       setLoading(false);
     }
@@ -89,17 +106,16 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const verifyCode = async (e) => {
     e.preventDefault();
     setError('');
-    if (otp.length !== 6) {
-      setError("6 xonali kodni to'liq kiriting");
+    if (code.length !== 4) {
+      setError("4 xonali kodni to'liq kiriting");
       return;
     }
     setLoading(true);
     try {
-      const res = await authApi.telegramOtpVerify(tgToken, otp);
+      const res = await authApi.smsOtpVerify(fullPhone, code);
       localStorage.setItem('ssmart_user', JSON.stringify(res.user));
       localStorage.setItem('ssmart_user_token', res.access_token);
       window.dispatchEvent(new Event('ssmart-user-changed'));
-      stopPolling();
       onSuccess?.();
       onClose();
     } catch (e) {
@@ -132,169 +148,142 @@ export default function LoginModal({ open, onClose, onSuccess }) {
           <img src="/logo.png" alt="Ssmart" className="w-14 h-14 object-contain" />
         </div>
 
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900">
+        <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
           Ssmart ga kirish
         </h2>
+        <p className="text-sm text-gray-500 text-center mb-6">
+          {step === 'phone'
+            ? 'Telefon raqamingizni kiriting, sizga 4 xonali kod yuboramiz'
+            : 'SMS orqali kelgan 4 xonali kodni kiriting'}
+        </p>
 
-        {/* SELECT — usul tanlash */}
-        {step === 'select' && (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500 text-center mb-2">
-              Kirish usulini tanlang
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setStep('sms-error')}
-              className="w-full flex items-center gap-3 px-4 py-3.5 bg-white border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50/30 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5 text-primary-600" />
-              </div>
-              <div className="text-left flex-1">
-                <div className="font-semibold text-gray-900">SMS orqali</div>
-                <div className="text-xs text-gray-500">Telefon raqam + 4 xonali kod</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={startTelegramFlow}
-              disabled={loading}
-              className="w-full flex items-center gap-3 px-4 py-3.5 bg-white border-2 border-gray-200 hover:border-[#229ED9] hover:bg-[#229ED9]/5 rounded-xl transition-all disabled:opacity-50"
-            >
-              <div className="w-10 h-10 bg-[#229ED9]/15 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Send className="w-5 h-5 text-[#229ED9]" />
-              </div>
-              <div className="text-left flex-1">
-                <div className="font-semibold text-gray-900">Telegram orqali</div>
-                <div className="text-xs text-gray-500">Bot orqali tez va xavfsiz</div>
-              </div>
-              {loading && (
-                <div className="w-5 h-5 border-2 border-[#229ED9] border-t-transparent rounded-full animate-spin" />
-              )}
-            </button>
-
-            {error && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 text-center">
-                {error}
-              </div>
-            )}
-
-            <p className="text-xs text-gray-500 text-center mt-5 leading-relaxed">
-              Davom etgan holda men <span className="text-primary-600 underline cursor-pointer">shaxsiy ma'lumotlarni qayta ishlash siyosatiga rozilik bildirasiz</span> va <span className="text-primary-600 underline cursor-pointer">Ssmart ommaviy oferta bilan rozi bo'laman</span>
-            </p>
-          </div>
-        )}
-
-        {/* SMS — texnik nosozlik */}
-        {step === 'sms-error' && (
-          <div className="text-center">
-            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-amber-500" />
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Texnik nosozlik</h3>
-            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-              SMS orqali kirish hozircha texnik nosozlik tufayli ishlamayapti.
-              <br />
-              Iltimos, <strong>Telegram</strong> orqali kiring.
-            </p>
-            <button
-              type="button"
-              onClick={() => setStep('select')}
-              className="w-full inline-flex items-center justify-center gap-2 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Orqaga
-            </button>
-          </div>
-        )}
-
-        {/* TELEGRAM — botga o'tish */}
-        {step === 'tg-link' && (
-          <div>
-            <div className="text-center mb-4">
-              <div className="w-16 h-16 bg-[#229ED9]/15 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Send className="w-8 h-8 text-[#229ED9]" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-1">Telegram botga o'ting</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Quyidagi tugmani bosing va botda <strong>"Telefon raqamni yuborish"</strong> tugmasini bosing.
-                Bot sizga 6 xonali kod yuboradi.
-              </p>
-            </div>
-
-            <a
-              href={tgBotLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#229ED9] hover:bg-[#1c87b8] text-white font-semibold rounded-xl transition-colors mb-3"
-            >
-              <Send className="w-5 h-5" />
-              Telegram'da ochish
-              <ExternalLink className="w-4 h-4" />
-            </a>
-
-            {/* Status indicator */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-3 flex items-center gap-2 text-sm">
-              {tgStatus === 'pending' && (
-                <>
-                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-gray-600">Telegram'dan kod kutilmoqda...</span>
-                </>
-              )}
-              {tgStatus === 'code_sent' && (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span className="text-green-700 font-medium">Kod yuborildi! Pastga kiriting</span>
-                </>
-              )}
-              {tgStatus === 'expired' && (
-                <>
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <span className="text-red-700">Sessiya muddati tugadi</span>
-                </>
-              )}
-            </div>
-
-            {error && (
-              <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                {error}
-              </div>
-            )}
-
-            {/* Code input — har doim ko'rinadi, lekin code_sent bo'lguncha bekor */}
-            <form onSubmit={verifyCode}>
+        {step === 'phone' && (
+          <form onSubmit={requestCode} className="space-y-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bot yuborgan kodni kiriting
+                Telefon raqam
+              </label>
+              <div className="relative">
+                <Phone className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  value={formatPhone(phoneDigits)}
+                  onChange={handlePhoneChange}
+                  placeholder="+998 (__) ___-__-__"
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base font-medium tracking-wide"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || phoneDigits.length !== 9}
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Yuborilmoqda...
+                </>
+              ) : (
+                'Kod yuborish'
+              )}
+            </button>
+
+            <p className="text-xs text-gray-500 text-center mt-3 leading-relaxed">
+              Davom etgan holda{' '}
+              <span className="text-primary-600 underline cursor-pointer">
+                shaxsiy ma'lumotlarni qayta ishlash siyosatiga
+              </span>{' '}
+              va{' '}
+              <span className="text-primary-600 underline cursor-pointer">
+                Ssmart ommaviy ofertasiga
+              </span>{' '}
+              rozilik bildirasiz.
+            </p>
+          </form>
+        )}
+
+        {step === 'code' && (
+          <form onSubmit={verifyCode} className="space-y-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-2 text-sm">
+              <ShieldCheck className="w-5 h-5 text-primary-600 flex-shrink-0" />
+              <span className="text-gray-700">
+                Kod yuborildi:{' '}
+                <span className="font-semibold text-gray-900">{formatPhone(phoneDigits)}</span>
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                4 xonali kod
               </label>
               <input
+                ref={codeInputRef}
                 type="text"
                 inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                disabled={tgStatus === 'expired' || loading}
-                className="w-full px-4 py-3.5 mb-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 text-center text-2xl tracking-widest font-mono disabled:opacity-50"
-                autoFocus
+                autoComplete="one-time-code"
+                maxLength={4}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="0000"
+                className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-center text-3xl tracking-[0.6em] font-mono"
               />
-              <button
-                type="submit"
-                disabled={otp.length !== 6 || loading || tgStatus === 'expired'}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 rounded-xl transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
-              </button>
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || code.length !== 4}
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Tekshirilmoqda...
+                </>
+              ) : (
+                'Tasdiqlash'
+              )}
+            </button>
+
+            <div className="flex items-center justify-between text-sm pt-1">
               <button
                 type="button"
-                onClick={() => { stopPolling(); setStep('select'); }}
-                className="w-full mt-2 py-2 text-sm text-gray-500 hover:text-gray-700"
+                onClick={() => { setStep('phone'); setError(''); setCode(''); }}
+                className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900"
               >
-                Bekor qilish
+                <ArrowLeft className="w-4 h-4" />
+                Raqamni o'zgartirish
               </button>
-            </form>
-          </div>
+              {resendIn > 0 ? (
+                <span className="text-gray-400">Qayta yuborish: {resendIn}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={requestCode}
+                  disabled={loading}
+                  className="text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50"
+                >
+                  Kodni qayta yuborish
+                </button>
+              )}
+            </div>
+          </form>
         )}
       </div>
     </div>
