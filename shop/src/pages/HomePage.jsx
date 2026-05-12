@@ -79,7 +79,7 @@ export default function HomePage() {
               {t('products.details')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {popularProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -98,7 +98,7 @@ export default function HomePage() {
               {t('common.showAll')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {discountProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -110,7 +110,7 @@ export default function HomePage() {
           (ommabop/chegirmali bo'limda bo'lganlari chiqarilmaydi) */}
       {otherProducts.length > 0 && (
         <section className="container-custom py-10">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {otherProducts.slice(0, visibleCount).map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

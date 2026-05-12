@@ -8,12 +8,12 @@ import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import MIcon from './MIcon';
 import FluentEmoji from './FluentEmoji';
 
-// Variant — card o'lchamlarini sahifaga moslab beradi:
-//   home    → 232×465 (rasm 232×309)  [bosh sahifa]
-//   catalog → 215×443 (rasm 215×287)  [katalog]
+// Kartochka grid ustunini to'liq egallaydi (fluid). Yuqori chegara — juda
+// katta ekranlarda kartochkalar haddan tashqari kattalashmasligi uchun.
+// Shu sabab 1200-1600px oralig'ida ekranga nisbatan tabiiy o'sadi/kichrayadi.
 const CARD_VARIANTS = {
-  home:    { maxW: 'max-w-[232px]' },
-  catalog: { maxW: 'max-w-[245px]' },
+  home:    { maxW: 'max-w-[288px]' },
+  catalog: { maxW: 'max-w-[260px]' },
 };
 
 export default function ProductCard({ product, variant = 'home' }) {
