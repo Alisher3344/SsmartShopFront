@@ -102,6 +102,16 @@ export const authApi = {
   // Telefon + parol bilan hisobga kirish
   phoneLogin: (phone, password) =>
     request('/users/phone-login', { method: 'POST', body: { phone, password } }),
+  // Parolni tiklash
+  passwordResetRequest: (phone) =>
+    request('/users/password-reset/request', { method: 'POST', body: { phone } }),
+  passwordResetVerify: (phone, code) =>
+    request('/users/password-reset/verify', { method: 'POST', body: { phone, code } }),
+  passwordResetComplete: (reset_token, password) =>
+    request('/users/password-reset/complete', {
+      method: 'POST',
+      body: { reset_token, password },
+    }),
 };
 
 // ===== PRODUCTS =====

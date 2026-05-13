@@ -34,6 +34,9 @@ const isPasswordValid = (pwd) => {
 //   'register-otp'     — OTP kod
 //   'register-pass'    — parol kiritish
 //   'register-name'    — Assalomu Alaykum + ism familiya
+//   'reset-phone'      — parolni tiklash: telefon
+//   'reset-otp'        — parolni tiklash: SMS kod
+//   'reset-pass'       — parolni tiklash: yangi parol
 
 export default function LoginModal({ open, onClose, onSuccess }) {
   const [step, setStep] = useState('choose');
@@ -42,8 +45,10 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [registrationToken, setRegistrationToken] = useState('');
+  const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorAction, setErrorAction] = useState(null); // {label, onClick}
   const [resendIn, setResendIn] = useState(0);
   const codeInputRef = useRef(null);
   const timerRef = useRef(null);
@@ -57,8 +62,10 @@ export default function LoginModal({ open, onClose, onSuccess }) {
       setPassword('');
       setFullName('');
       setRegistrationToken('');
+      setResetToken('');
       setLoading(false);
       setError('');
+      setErrorAction(null);
       setResendIn(0);
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -77,7 +84,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
 
   // OTP step'iga o'tilganda inputga focus
   useEffect(() => {
-    if (step === 'register-otp' && codeInputRef.current) {
+    if ((step === 'register-otp' || step === 'reset-otp') && codeInputRef.current) {
       codeInputRef.current.focus();
     }
   }, [step]);
@@ -190,6 +197,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const phoneLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setErrorAction(null);
     if (phoneDigits.length !== 9) {
       setError("Telefon raqamni to'liq kiriting");
       return;
@@ -203,7 +211,103 @@ export default function LoginModal({ open, onClose, onSuccess }) {
       const res = await authApi.phoneLogin(fullPhone, password);
       persistAndFinish(res);
     } catch (e) {
-      setError(e.message || "Telefon yoki parol noto'g'ri");
+      const msg = e.message || "Telefon yoki parol noto'g'ri";
+      setError(msg);
+      // 404 — hisob yo'q. Foydalanuvchiga "Ro'yxatdan o'tish" tugmasini taklif qilamiz
+      if (e.status === 404) {
+        setErrorAction({
+          label: "Ro'yxatdan o'tish",
+          onClick: () => {
+            setError('');
+            setErrorAction(null);
+            setPassword('');
+            setStep('register-phone');
+          },
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== Parolni tiklash: SMS yuborish =====
+  const startReset = () => {
+    // Login step'da kiritilgan telefonni saqlab qolamiz, parolni tashlaymiz
+    setStep('reset-phone');
+    setError('');
+    setErrorAction(null);
+    setPassword('');
+  };
+
+  const requestResetCode = async (e) => {
+    e?.preventDefault();
+    setError('');
+    setErrorAction(null);
+    if (phoneDigits.length !== 9) {
+      setError("Telefon raqamni to'liq kiriting");
+      return;
+    }
+    setLoading(true);
+    try {
+      await authApi.passwordResetRequest(fullPhone);
+      setStep('reset-otp');
+      setCode('');
+      startResendTimer();
+    } catch (e) {
+      const msg = e.message || "SMS yuborib bo'lmadi";
+      setError(msg);
+      if (e.status === 404) {
+        setErrorAction({
+          label: "Ro'yxatdan o'tish",
+          onClick: () => {
+            setError('');
+            setErrorAction(null);
+            setStep('register-phone');
+          },
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== Parolni tiklash: OTP tasdiqlash =====
+  const verifyResetCode = async (e) => {
+    e.preventDefault();
+    setError('');
+    setErrorAction(null);
+    if (code.length !== 4) {
+      setError("4 xonali kodni to'liq kiriting");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.passwordResetVerify(fullPhone, code);
+      setResetToken(res.reset_token);
+      setPassword('');
+      setStep('reset-pass');
+    } catch (e) {
+      setError(e.message || "Kod noto'g'ri yoki muddati tugagan");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== Parolni tiklash: yangi parol saqlash =====
+  const completeReset = async (e) => {
+    e.preventDefault();
+    setError('');
+    setErrorAction(null);
+    if (!isPasswordValid(password)) {
+      setError("Parol kamida 6 belgi, 1 katta harf va 1 raqam o'z ichiga olishi kerak");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.passwordResetComplete(resetToken, password);
+      persistAndFinish(res);
+    } catch (e) {
+      setError(e.message || "Parolni tiklab bo'lmadi");
     } finally {
       setLoading(false);
     }
@@ -214,10 +318,12 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const goBackToChoose = () => {
     setStep('choose');
     setError('');
+    setErrorAction(null);
     setCode('');
     setPassword('');
     setFullName('');
     setRegistrationToken('');
+    setResetToken('');
     setPhoneDigits('');
   };
 
@@ -307,11 +413,21 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                 </div>
               </div>
 
-              <ErrorBox text={error} />
+              <ErrorBox text={error} action={errorAction} />
 
               <SubmitBtn loading={loading} disabled={phoneDigits.length !== 9 || password.length < 1}>
                 Kirish
               </SubmitBtn>
+
+              <div className="text-center pt-1">
+                <button
+                  type="button"
+                  onClick={startReset}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                >
+                  Parolni unutdingizmi? Tiklash
+                </button>
+              </div>
             </form>
           </>
         )}
@@ -326,7 +442,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
 
             <form onSubmit={requestCode} className="space-y-4">
               <PhoneField value={phoneDigits} onChange={handlePhoneChange} />
-              <ErrorBox text={error} />
+              <ErrorBox text={error} action={errorAction} />
               <SubmitBtn loading={loading} disabled={phoneDigits.length !== 9}>
                 Kod yuborish
               </SubmitBtn>
@@ -369,7 +485,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                 />
               </div>
 
-              <ErrorBox text={error} />
+              <ErrorBox text={error} action={errorAction} />
 
               <SubmitBtn loading={loading} disabled={code.length !== 4}>
                 Tasdiqlash
@@ -429,7 +545,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                 <PwdHint ok={pwdChecks.digit}>Kamida 1 ta raqam (0-9)</PwdHint>
               </div>
 
-              <ErrorBox text={error} />
+              <ErrorBox text={error} action={errorAction} />
 
               <SubmitBtn loading={false} disabled={!isPasswordValid(password)}>
                 Saqlash
@@ -469,10 +585,134 @@ export default function LoginModal({ open, onClose, onSuccess }) {
                 </div>
               </div>
 
-              <ErrorBox text={error} />
+              <ErrorBox text={error} action={errorAction} />
 
               <SubmitBtn loading={loading} disabled={fullName.trim().length < 2}>
                 Saqlash
+              </SubmitBtn>
+            </form>
+          </>
+        )}
+
+        {/* ============ STEP: RESET — PHONE ============ */}
+        {step === 'reset-phone' && (
+          <>
+            <BackHeader
+              onBack={() => { setStep('login'); setError(''); setErrorAction(null); }}
+              title="Parolni tiklash"
+            />
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Telefon raqamingizni kiriting, sizga 4 xonali kod yuboramiz
+            </p>
+
+            <form onSubmit={requestResetCode} className="space-y-4">
+              <PhoneField value={phoneDigits} onChange={handlePhoneChange} />
+              <ErrorBox text={error} action={errorAction} />
+              <SubmitBtn loading={loading} disabled={phoneDigits.length !== 9}>
+                Kod yuborish
+              </SubmitBtn>
+            </form>
+          </>
+        )}
+
+        {/* ============ STEP: RESET — OTP ============ */}
+        {step === 'reset-otp' && (
+          <>
+            <BackHeader
+              onBack={() => { setStep('reset-phone'); setError(''); setErrorAction(null); setCode(''); }}
+              title="SMS kod"
+            />
+            <p className="text-sm text-gray-500 text-center mb-6">
+              SMS orqali kelgan 4 xonali kodni kiriting
+            </p>
+
+            <form onSubmit={verifyResetCode} className="space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-2 text-sm">
+                <ShieldCheck className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                <span className="text-gray-700">
+                  Kod yuborildi:{' '}
+                  <span className="font-semibold text-gray-900">{formatPhone(phoneDigits)}</span>
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">4 xonali kod</label>
+                <input
+                  ref={codeInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={4}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="0000"
+                  className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-center text-3xl tracking-[0.6em] font-mono"
+                />
+              </div>
+
+              <ErrorBox text={error} action={errorAction} />
+
+              <SubmitBtn loading={loading} disabled={code.length !== 4}>
+                Tasdiqlash
+              </SubmitBtn>
+
+              <div className="flex items-center justify-between text-sm pt-1">
+                <span className="text-gray-400">
+                  {resendIn > 0 ? `Qayta yuborish: ${resendIn}s` : ''}
+                </span>
+                {resendIn === 0 && (
+                  <button
+                    type="button"
+                    onClick={requestResetCode}
+                    disabled={loading}
+                    className="text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50"
+                  >
+                    Kodni qayta yuborish
+                  </button>
+                )}
+              </div>
+            </form>
+          </>
+        )}
+
+        {/* ============ STEP: RESET — PASSWORD ============ */}
+        {step === 'reset-pass' && (
+          <>
+            <BackHeader
+              onBack={() => { setStep('reset-otp'); setError(''); setErrorAction(null); }}
+              title="Yangi parol"
+            />
+            <p className="text-sm text-gray-500 text-center mb-6">
+              Hisobingiz uchun yangi parol o'rnating
+            </p>
+
+            <form onSubmit={completeReset} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Yangi parol</label>
+                <div className="relative">
+                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    placeholder="Yangi parol"
+                    autoFocus
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+                <PwdHint ok={pwdChecks.length}>Kamida 6 belgi</PwdHint>
+                <PwdHint ok={pwdChecks.upper}>Kamida 1 ta katta harf (A-Z)</PwdHint>
+                <PwdHint ok={pwdChecks.digit}>Kamida 1 ta raqam (0-9)</PwdHint>
+              </div>
+
+              <ErrorBox text={error} action={errorAction} />
+
+              <SubmitBtn loading={loading} disabled={!isPasswordValid(password)}>
+                Saqlash va kirish
               </SubmitBtn>
             </form>
           </>
@@ -521,12 +761,23 @@ function PhoneField({ value, onChange }) {
   );
 }
 
-function ErrorBox({ text }) {
+function ErrorBox({ text, action }) {
   if (!text) return null;
   return (
-    <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-start gap-2">
-      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-      <span>{text}</span>
+    <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+      <div className="flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <span className="flex-1">{text}</span>
+      </div>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="mt-2 text-xs font-semibold text-primary-700 hover:text-primary-800 underline"
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }
