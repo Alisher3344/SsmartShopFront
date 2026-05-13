@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart, ShoppingCart, Check, ArrowLeft, Star, Truck, ShieldCheck, CreditCard, MessageSquare, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Heart, ShoppingCart, Check, ArrowLeft, Star, Truck, ShieldCheck, CreditCard, MessageSquare, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAuthGate } from '../context/AuthGateContext';
 import { formatPrice, calculateMonthly, findSubcategoryById, formatDeliveryDate } from '../data/products';
@@ -66,7 +66,7 @@ export default function ProductPage() {
   useEffect(() => {
     if (!product) return;
     const max = product.creditMonths || 0;
-    const terms = [3, 6, 12, 24].filter(t => t <= max);
+    const terms = [3, 6, 9, 12].filter(t => t <= max);
     setCreditTerm(terms.length ? terms[terms.length - 1] : 0);
   }, [product?.id, product?.creditMonths]);
 
@@ -315,23 +315,18 @@ export default function ProductPage() {
 
             {/* Kredit — Variant A: Kalkulyator stili */}
             {(() => {
-              const terms = [3, 6, 12, 24];
+              const terms = [3, 6, 9, 12];
               return (
                 <div className="rounded-2xl border border-gray-200 p-4 bg-gradient-to-br from-primary-50/40 to-white">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs uppercase tracking-wider text-gray-500 font-medium">
-                      {lang === 'uz' ? "Oyiga to'lov" : 'В месяц'}
-                    </div>
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
-                      0%
-                    </span>
+                  <div className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-2">
+                    {lang === 'uz' ? "Oyiga to'lov" : 'В месяц'}
                   </div>
                   <div className="mb-4">
                     <span className="text-3xl font-extrabold text-primary-700 tracking-tight">
                       {formatPrice(calculateMonthly(product.price, creditTerm))} {t('common.currency')}
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-3">
                     {terms.map(m => {
                       const isActive = creditTerm === m;
                       return (
@@ -351,6 +346,17 @@ export default function ProductPage() {
                       );
                     })}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => { /* TODO: limit olish oqimi */ }}
+                    className="btn-limit group w-full py-3 rounded-xl text-sm font-extrabold tracking-tight"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <Sparkles className="sparkle w-4 h-4" />
+                      {lang === 'uz' ? 'Limit olish' : 'Получить лимит'}
+                      <ChevronRight className="w-4 h-4 transition-transform duration-500 ease-out group-hover:translate-x-1" />
+                    </span>
+                  </button>
                 </div>
               );
             })()}
@@ -373,12 +379,9 @@ export default function ProductPage() {
                   <Check className="w-5 h-5" /> {t('products.inCart')}
                 </span>
               ) : (
-                <>
-                  <div className="text-base leading-tight">{t('products.addToCart')}</div>
-                  <div className="text-xs font-normal opacity-90 mt-0.5">
-                    {formatDeliveryDate(product.deliveryDays ?? product.delivery_days ?? 3, lang)} {lang === 'uz' ? 'yetkazib beramiz' : 'доставим'}
-                  </div>
-                </>
+                <span className="flex items-center justify-center gap-2">
+                  <ShoppingCart className="w-5 h-5" /> {t('products.addToCart')}
+                </span>
               )}
             </button>
             <button
@@ -429,6 +432,21 @@ export default function ProductPage() {
 
       {/* Umumiy tavsif va Xususiyatlar — pastga ko'chirildi (to'liq kenglikda) */}
       <div className="mt-8 space-y-4">
+        {/* Yetkazib berish — umumiy tasnifdan oldin */}
+        <div className="card p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center flex-shrink-0">
+            <Truck className="w-6 h-6 text-primary-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-0.5">
+              {lang === 'uz' ? 'Yetkazib berish' : 'Доставка'}
+            </div>
+            <div className="text-base font-semibold text-gray-900">
+              {formatDeliveryDate(product.deliveryDays ?? product.delivery_days ?? 3, lang)} {lang === 'uz' ? 'kuni yetkazib beramiz' : 'доставим'}
+            </div>
+          </div>
+        </div>
+
         {product.description?.[lang] && (
           <div className="card p-5">
             <h3 className="text-base font-semibold text-gray-900 mb-2">

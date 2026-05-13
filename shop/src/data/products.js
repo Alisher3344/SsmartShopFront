@@ -362,10 +362,14 @@ export const formatPrice = (price) => {
   return new Intl.NumberFormat('ru-RU').format(price || 0);
 };
 
-// Oylik to'lovni hisoblash
+// Muddatli to'lov ustamasi — har 3 oyga +10%
+export const CREDIT_MARKUPS = { 3: 1.10, 6: 1.20, 9: 1.30, 12: 1.40 };
+
+// Oylik to'lovni hisoblash (ustama bilan)
 export const calculateMonthly = (price, months = 12) => {
   if (!months || months === 0) return 0;
-  return Math.round(price / months);
+  const markup = CREDIT_MARKUPS[months] ?? 1;
+  return Math.round((price * markup) / months);
 };
 
 // Oy nomlari — yetkazib berish sanasini formatlash uchun
