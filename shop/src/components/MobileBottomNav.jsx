@@ -1,6 +1,7 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useShop } from '../context/ShopContext';
+import { useAuthGate } from '../context/AuthGateContext';
 import MIcon from './MIcon';
 
 // Mobil pastki navigatsiya — faqat md dan past ekranlarda ko'rinadi
@@ -8,14 +9,26 @@ export default function MobileBottomNav() {
   const { t } = useTranslation();
   const { cartCount, favorites } = useShop();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { requireAuth } = useAuthGate();
 
   const items = [
     { to: '/', icon: 'home', label: t('nav.home', 'Bosh sahifa'), exact: true },
     { to: '/catalog', icon: 'apps', label: t('nav.catalog', 'Katalog') },
     { to: '/cart', icon: 'shopping_cart', label: t('nav.cart', 'Savat'), badge: cartCount },
     { to: '/favorites', icon: 'favorite', label: t('nav.favorites', 'Sevimli'), badge: favorites.length },
-    { to: '/profile', icon: 'person', label: t('nav.profile', 'Kabinet') },
+    { to: '/profile', icon: 'person', label: t('nav.profile', 'Kabinet'), gated: true },
   ];
+
+  const handleClick = (item) => (e) => {
+    if (!item.gated) return;
+    e.preventDefault();
+    if (localStorage.getItem('ssmart_user')) {
+      navigate(item.to);
+    } else {
+      requireAuth(() => navigate(item.to));
+    }
+  };
 
   return (
     <>
@@ -35,6 +48,7 @@ export default function MobileBottomNav() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={handleClick(item)}
                 className={`relative flex flex-col items-center justify-center gap-0.5 flex-1 text-[10px] font-medium transition-colors ${
                   isActive ? 'text-primary-600' : 'text-gray-500'
                 }`}
