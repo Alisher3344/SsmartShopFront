@@ -221,7 +221,7 @@ export default function LoginModal({ open, onClose, onSuccess }) {
     } catch (e) {
       const msg = e.message || "Telefon yoki parol noto'g'ri";
       setError(msg);
-      // 404 — hisob yo'q. Foydalanuvchiga "Ro'yxatdan o'tish" tugmasini taklif qilamiz
+      // 404 — hisob yo'q → "Ro'yxatdan o'tish" tugmasi
       if (e.status === 404) {
         setErrorAction({
           label: "Ro'yxatdan o'tish",
@@ -231,6 +231,12 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             setPassword('');
             setStep('register-phone');
           },
+        });
+      } else if (e.status === 401) {
+        // 401 — hisob bor lekin parol noto'g'ri → "Parolni unutdingizmi? Tiklash"
+        setErrorAction({
+          label: "Parolni unutdingizmi? Tiklash",
+          onClick: startReset,
         });
       }
     } finally {
@@ -427,16 +433,6 @@ export default function LoginModal({ open, onClose, onSuccess }) {
               <SubmitBtn loading={loading} disabled={phoneDigits.length !== 9 || password.length < 1}>
                 Kirish
               </SubmitBtn>
-
-              <div className="text-center pt-1">
-                <button
-                  type="button"
-                  onClick={startReset}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Parolni unutdingizmi? Tiklash
-                </button>
-              </div>
             </form>
           </>
         )}
