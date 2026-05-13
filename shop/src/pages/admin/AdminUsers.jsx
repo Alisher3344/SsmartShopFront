@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, X, User as UserIcon, Phone, Lock, Save, Users as UsersIcon, AlertCircle, Check, ChevronRight } from 'lucide-react';
+import { Search, X, User as UserIcon, Phone, Lock, Save, Users as UsersIcon, AlertCircle, Check, ChevronRight, Trash2 } from 'lucide-react';
 import { adminUsersApi, resolveImage } from '../../api/client';
 
 const formatPhone = (p) => {
@@ -53,6 +53,11 @@ export default function AdminUsers() {
   const onUserUpdated = (updated) => {
     setUsers(prev => prev.map(u => (u.id === updated.id ? { ...u, ...updated } : u)));
     setSelected(updated);
+  };
+
+  const onUserDeleted = (deletedId) => {
+    setUsers(prev => prev.filter(u => u.id !== deletedId));
+    setSelected(null);
   };
 
   return (
@@ -145,13 +150,14 @@ export default function AdminUsers() {
           user={selected}
           onClose={() => setSelected(null)}
           onUpdated={onUserUpdated}
+          onDeleted={onUserDeleted}
         />
       )}
     </div>
   );
 }
 
-function UserDetailModal({ user, onClose, onUpdated }) {
+function UserDetailModal({ user, onClose, onUpdated, onDeleted }) {
   const [fullName, setFullName] = useState(user.full_name || '');
   const [showPwdForm, setShowPwdForm] = useState(false);
   const [password, setPassword] = useState('');
@@ -187,6 +193,22 @@ function UserDetailModal({ user, onClose, onUpdated }) {
     } catch (e) {
       setError(e.message || "Saqlab bo'lmadi");
     } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteUser = async () => {
+    const name = user.full_name || user.phone || `#${user.id}`;
+    const msg = `"${name}" foydalanuvchini va uning barcha ma'lumotlarini (buyurtmalar, sharhlar) butunlay o'chirishni tasdiqlaysizmi? Bu amalni qaytarib bo'lmaydi.`;
+    if (!confirm(msg)) return;
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      await adminUsersApi.delete(user.id);
+      onDeleted?.(user.id);
+    } catch (e) {
+      setError(e.message || "Foydalanuvchini o'chirib bo'lmadi");
       setSaving(false);
     }
   };
@@ -345,6 +367,22 @@ function UserDetailModal({ user, onClose, onUpdated }) {
             {success}
           </div>
         )}
+
+        {/* Foydalanuvchini butunlay o'chirish */}
+        <div className="border-t border-gray-100 pt-4 mt-4">
+          <button
+            type="button"
+            onClick={deleteUser}
+            disabled={saving}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-sm font-medium border border-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Trash2 className="w-4 h-4" />
+            Foydalanuvchini o'chirish
+          </button>
+          <p className="text-[11px] text-gray-500 mt-1.5 text-center">
+            Barcha buyurtmalar va sharhlar ham o'chiriladi
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -214,6 +214,7 @@ export const adminUsersApi = {
   },
   get: (id) => request(`/admin/users/${id}`),
   update: (id, data) => request(`/admin/users/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
 };
 
 // ===== UPLOAD =====
