@@ -43,7 +43,8 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const [phoneDigits, setPhoneDigits] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [registrationToken, setRegistrationToken] = useState('');
   const [resetToken, setResetToken] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,8 @@ export default function LoginModal({ open, onClose, onSuccess }) {
       setPhoneDigits('');
       setCode('');
       setPassword('');
-      setFullName('');
+      setFirstName('');
+      setLastName('');
       setRegistrationToken('');
       setResetToken('');
       setLoading(false);
@@ -177,14 +179,20 @@ export default function LoginModal({ open, onClose, onSuccess }) {
   const completeRegistration = async (e) => {
     e.preventDefault();
     setError('');
-    const name = fullName.trim();
-    if (name.length < 2) {
-      setError("Ism Familiyani kiriting (kamida 2 belgi)");
+    const first = firstName.trim();
+    const last = lastName.trim();
+    if (first.length < 2) {
+      setError("Ismni kiriting (kamida 2 belgi)");
       return;
     }
+    if (last.length < 2) {
+      setError("Familiyani kiriting (kamida 2 belgi)");
+      return;
+    }
+    const fullName = `${first} ${last}`;
     setLoading(true);
     try {
-      const res = await authApi.registerComplete(registrationToken, password, name);
+      const res = await authApi.registerComplete(registrationToken, password, fullName);
       persistAndFinish(res);
     } catch (e) {
       setError(e.message || "Ro'yxatdan o'tib bo'lmadi");
@@ -321,7 +329,8 @@ export default function LoginModal({ open, onClose, onSuccess }) {
     setErrorAction(null);
     setCode('');
     setPassword('');
-    setFullName('');
+    setFirstName('');
+    setLastName('');
     setRegistrationToken('');
     setResetToken('');
     setPhoneDigits('');
@@ -569,17 +578,33 @@ export default function LoginModal({ open, onClose, onSuccess }) {
 
             <form onSubmit={completeRegistration} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ism Familiya</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ism</label>
                 <div className="relative">
                   <User className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    autoComplete="name"
-                    placeholder="Aliyev Ali"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    autoComplete="given-name"
+                    placeholder="Ali"
                     autoFocus
-                    maxLength={255}
+                    maxLength={120}
+                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Familiya</label>
+                <div className="relative">
+                  <User className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    autoComplete="family-name"
+                    placeholder="Aliyev"
+                    maxLength={120}
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
                   />
                 </div>
@@ -587,7 +612,10 @@ export default function LoginModal({ open, onClose, onSuccess }) {
 
               <ErrorBox text={error} action={errorAction} />
 
-              <SubmitBtn loading={loading} disabled={fullName.trim().length < 2}>
+              <SubmitBtn
+                loading={loading}
+                disabled={firstName.trim().length < 2 || lastName.trim().length < 2}
+              >
                 Saqlash
               </SubmitBtn>
             </form>
