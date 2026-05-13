@@ -28,6 +28,7 @@ import AdminLowStock from './pages/admin/AdminLowStock';
 import AdminPopular from './pages/admin/AdminPopular';
 import AdminStores from './pages/admin/AdminStores';
 import AdminStaffStats from './pages/admin/AdminStaffStats';
+import AdminUsers from './pages/admin/AdminUsers';
 
 // Sayt qatlami (header + footer bilan)
 function PublicLayout({ children }) {
@@ -62,6 +63,7 @@ function App() {
                 <Route path="low-stock" element={<AdminLowStock />} />
                 <Route path="popular" element={<AdminPopular />} />
                 <Route path="stores" element={<AdminStores />} />
+                <Route path="users" element={<AdminUsers />} />
                 <Route path="my-stats" element={<AdminStaffStats />} />
               </Route>
 

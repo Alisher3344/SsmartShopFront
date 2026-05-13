@@ -196,6 +196,16 @@ export const staffApi = {
   delete: (id) => request(`/staff/${id}`, { method: 'DELETE' }),
 };
 
+// ===== ADMIN USERS (faqat superadmin) =====
+export const adminUsersApi = {
+  list: (search) => {
+    const qs = search ? `?search=${encodeURIComponent(search)}` : '';
+    return request(`/admin/users${qs}`);
+  },
+  get: (id) => request(`/admin/users/${id}`),
+  update: (id, data) => request(`/admin/users/${id}`, { method: 'PUT', body: data }),
+};
+
 // ===== UPLOAD =====
 export const uploadApi = {
   image: async (file) => {

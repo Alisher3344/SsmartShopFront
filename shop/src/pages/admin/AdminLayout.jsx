@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom';
-import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon } from 'lucide-react';
+import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../../context/AdminThemeContext';
@@ -43,6 +43,7 @@ function AdminLayoutInner() {
     { to: '/Tty0xssmart/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
     { to: '/Tty0xssmart/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
     { to: '/Tty0xssmart/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
+    { to: '/Tty0xssmart/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'] },
   ];
 
   const visibleNav = navItems.filter(item => item.roles.includes(role));
