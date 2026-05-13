@@ -29,6 +29,19 @@ export default function ProductPage() {
   const [activeImage, setActiveImage] = useState('');
   const [creditTerm, setCreditTerm] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  // Karusel + thumbnails faqat lg+ (>=1024px) da ishlaydi. Mobil/tabletda — sodda prev/next.
+  const [isLgUp, setIsLgUp] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.matchMedia('(min-width: 1024px)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const handler = (e) => setIsLgUp(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (product) setActiveImage(allImages[0] || '');
@@ -36,8 +49,9 @@ export default function ProductPage() {
   }, [product?.id]);
 
   // Carousel: 2+ rasmlar bo'lsa avto-aylantirish (har 3.5s, hover'da to'xtaydi)
+  // Faqat lg+ da ishlaydi — mobil/tabletda karusel yo'q, foydalanuvchi qo'lda navlatadi
   useEffect(() => {
-    if (allImages.length <= 1 || isPaused) return;
+    if (!isLgUp || allImages.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
       setActiveImage(prev => {
         const idx = allImages.indexOf(prev);
@@ -46,7 +60,7 @@ export default function ProductPage() {
     }, 3500);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allImages.length, isPaused, product?.id]);
+  }, [allImages.length, isPaused, isLgUp, product?.id]);
 
   // Mahsulot creditMonths'iga qarab tab'larni belgilash (eng katta termni default)
   useEffect(() => {
@@ -105,8 +119,9 @@ export default function ProductPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,620px)_1fr] gap-8">
         {/* Gallery */}
         <div className="flex gap-3 items-start">
+          {/* Thumbnails — faqat lg+ (>=1024px) da ko'rinadi */}
           {hasMultiple && (
-            <div className="flex flex-col gap-2 w-[80px] flex-shrink-0">
+            <div className="hidden lg:flex flex-col gap-2 w-[80px] flex-shrink-0">
               {allImages.map((img, idx) => (
                 <button
                   key={`${img}-${idx}`}
@@ -133,11 +148,12 @@ export default function ProductPage() {
 
           <div
             className="flex-1 min-w-0 relative"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseEnter={() => isLgUp && setIsPaused(true)}
+            onMouseLeave={() => isLgUp && setIsPaused(false)}
           >
-            {allImages.length > 1 ? (
-              <div className="relative overflow-hidden rounded-xl h-[620px] group">
+            {hasMultiple ? (
+              <div className="relative overflow-hidden rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] group">
+                {/* Karusel sliding effekti — lg+ da auto-aylantiriladi, mobilda faqat qo'l bilan */}
                 <div
                   className="flex h-full transition-transform duration-700 ease-in-out"
                   style={{ transform: `translateX(-${Math.max(0, allImages.indexOf(activeImage)) * 100}%)` }}
@@ -156,14 +172,14 @@ export default function ProductPage() {
                   ))}
                 </div>
 
-                {/* Prev tugma */}
+                {/* Prev tugma — mobilda doim, lg+ da hover ostida */}
                 <button
                   type="button"
                   onClick={() => {
                     const idx = Math.max(0, allImages.indexOf(activeImage));
                     setActiveImage(allImages[(idx - 1 + allImages.length) % allImages.length]);
                   }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-white shadow-md flex items-center justify-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -176,7 +192,7 @@ export default function ProductPage() {
                     const idx = Math.max(0, allImages.indexOf(activeImage));
                     setActiveImage(allImages[(idx + 1) % allImages.length]);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 hover:bg-white shadow-md flex items-center justify-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                   aria-label="Next image"
                 >
                   <ChevronRight className="w-5 h-5 text-gray-700" />
@@ -201,14 +217,16 @@ export default function ProductPage() {
                 </div>
               </div>
             ) : (
-              <img
-                src={resolveImage(activeImage || product.image)}
-                alt={product.name[lang]}
-                className="block w-full max-h-[620px] object-contain rounded-xl"
-                onError={(e) => {
-                  e.target.src = `https://placehold.co/600x800/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
-                }}
-              />
+              <div className="rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] flex items-center justify-center overflow-hidden">
+                <img
+                  src={resolveImage(activeImage || product.image)}
+                  alt={product.name[lang]}
+                  className="block max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    e.target.src = `https://placehold.co/600x800/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
+                  }}
+                />
+              </div>
             )}
             {discount > 0 && (
               <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-md z-10">
