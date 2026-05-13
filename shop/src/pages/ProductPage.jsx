@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Heart, ShoppingCart, Check, ArrowLeft, Star, Truck, ShieldCheck, CreditCard, MessageSquare } from 'lucide-react';
+import { Heart, ShoppingCart, Check, ArrowLeft, Star, Truck, ShieldCheck, CreditCard, MessageSquare, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAuthGate } from '../context/AuthGateContext';
-import { formatPrice, calculateMonthly, findSubcategoryById } from '../data/products';
+import { formatPrice, calculateMonthly, findSubcategoryById, formatDeliveryDate } from '../data/products';
 import { useAdminData } from '../context/AdminDataContext';
 import { reviewsApi, resolveImage } from '../api/client';
 import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
@@ -27,11 +27,34 @@ export default function ProductPage() {
         : (product.image ? [product.image] : []))
     : [];
   const [activeImage, setActiveImage] = useState('');
+  const [creditTerm, setCreditTerm] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (product) setActiveImage(allImages[0] || '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
+
+  // Carousel: 2+ rasmlar bo'lsa avto-aylantirish (har 3.5s, hover'da to'xtaydi)
+  useEffect(() => {
+    if (allImages.length <= 1 || isPaused) return;
+    const interval = setInterval(() => {
+      setActiveImage(prev => {
+        const idx = allImages.indexOf(prev);
+        return allImages[(idx + 1) % allImages.length];
+      });
+    }, 3500);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allImages.length, isPaused, product?.id]);
+
+  // Mahsulot creditMonths'iga qarab tab'larni belgilash (eng katta termni default)
+  useEffect(() => {
+    if (!product) return;
+    const max = product.creditMonths || 0;
+    const terms = [3, 6, 12, 24].filter(t => t <= max);
+    setCreditTerm(terms.length ? terms[terms.length - 1] : 0);
+  }, [product?.id, product?.creditMonths]);
 
   const handleAddToCart = () => {
     requireAuth(() => addToCart(product));
@@ -79,19 +102,19 @@ export default function ProductPage() {
         {t('common.back')}
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,620px)_1fr] gap-8">
         {/* Gallery */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-start">
           {hasMultiple && (
-            <div className="flex flex-col gap-2 w-16 sm:w-20 flex-shrink-0">
+            <div className="flex flex-col gap-2 w-[80px] flex-shrink-0">
               {allImages.map((img, idx) => (
                 <button
                   key={`${img}-${idx}`}
                   onMouseEnter={() => setActiveImage(img)}
                   onClick={() => setActiveImage(img)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
+                  className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${
                     activeImage === img
-                      ? 'border-primary-600'
+                      ? 'border-primary-600 shadow-sm'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -108,22 +131,90 @@ export default function ProductPage() {
             </div>
           )}
 
-          <div className="card overflow-hidden flex-1">
-            <div className="aspect-[3/4] bg-gray-50 relative">
+          <div
+            className="flex-1 min-w-0 relative"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {allImages.length > 1 ? (
+              <div className="relative overflow-hidden rounded-xl h-[620px] group">
+                <div
+                  className="flex h-full transition-transform duration-700 ease-in-out"
+                  style={{ transform: `translateX(-${Math.max(0, allImages.indexOf(activeImage)) * 100}%)` }}
+                >
+                  {allImages.map((img, idx) => (
+                    <div key={`${img}-${idx}`} className="w-full h-full flex-shrink-0 flex items-center justify-center">
+                      <img
+                        src={resolveImage(img)}
+                        alt={product.name[lang]}
+                        className="block max-w-full max-h-full object-contain"
+                        onError={(e) => {
+                          e.target.src = `https://placehold.co/600x800/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Prev tugma */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const idx = Math.max(0, allImages.indexOf(activeImage));
+                    setActiveImage(allImages[(idx - 1 + allImages.length) % allImages.length]);
+                  }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5 text-gray-700" />
+                </button>
+
+                {/* Next tugma */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const idx = Math.max(0, allImages.indexOf(activeImage));
+                    setActiveImage(allImages[(idx + 1) % allImages.length]);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-700" />
+                </button>
+
+                {/* Dots indicator */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {allImages.map((img, idx) => {
+                    const isActive = idx === Math.max(0, allImages.indexOf(activeImage));
+                    return (
+                      <button
+                        key={`dot-${idx}`}
+                        type="button"
+                        onClick={() => setActiveImage(allImages[idx])}
+                        className={`h-1.5 rounded-full transition-all ${
+                          isActive ? 'w-6 bg-primary-600' : 'w-1.5 bg-gray-300'
+                        }`}
+                        aria-label={`Image ${idx + 1}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
               <img
                 src={resolveImage(activeImage || product.image)}
                 alt={product.name[lang]}
-                className="w-full h-full object-contain"
+                className="block w-full max-h-[620px] object-contain rounded-xl"
                 onError={(e) => {
-                  e.target.src = `https://placehold.co/600x600/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
+                  e.target.src = `https://placehold.co/600x800/e5e7eb/6b7280?text=${encodeURIComponent(product.name[lang])}`;
                 }}
               />
-              {discount > 0 && (
-                <div className="absolute top-4 left-4 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-md">
-                  −{discount}%
-                </div>
-              )}
-            </div>
+            )}
+            {discount > 0 && (
+              <div className="absolute top-3 left-3 bg-red-500 text-white text-sm font-bold px-3 py-1.5 rounded-md z-10">
+                −{discount}%
+              </div>
+            )}
           </div>
         </div>
 
@@ -190,67 +281,100 @@ export default function ProductPage() {
             </div>
           )}
 
-          {/* Price */}
-          <div className="card p-5 mb-4">
-            <div className="flex items-baseline gap-3 mb-2">
-              <span className="text-3xl font-bold text-gray-900">
+          {/* Price + Credit + Actions — SSMART brand style */}
+          <div className="card p-5 mb-6">
+            {/* Narx */}
+            <div className="flex items-baseline gap-3 mb-3">
+              <span className="text-3xl font-extrabold text-primary-700 tracking-tight">
                 {formatPrice(product.price)} {t('common.currency')}
               </span>
-              {product.oldPrice && (
-                <span className="text-lg text-gray-400 line-through">
-                  {formatPrice(product.oldPrice)} {t('common.currency')}
-                </span>
-              )}
             </div>
-            <div className="text-primary-600 font-medium">
-              {t('products.credit')}: {formatPrice(calculateMonthly(product.price, product.creditMonths))} {t('common.currency')}{t('products.perMonth')} × {product.creditMonths} {t('products.months')}
-            </div>
+            {product.oldPrice && (
+              <div className="text-base text-gray-400 line-through mb-4">
+                {formatPrice(product.oldPrice)} {t('common.currency')}
+              </div>
+            )}
+
+            {/* Kredit — Variant A: Kalkulyator stili */}
+            {(() => {
+              const terms = [3, 6, 12, 24];
+              return (
+                <div className="rounded-2xl border border-gray-200 p-4 bg-gradient-to-br from-primary-50/40 to-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-xs uppercase tracking-wider text-gray-500 font-medium">
+                      {lang === 'uz' ? "Oyiga to'lov" : 'В месяц'}
+                    </div>
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-primary-700 bg-primary-100 px-2 py-0.5 rounded-full">
+                      0%
+                    </span>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-3xl font-extrabold text-primary-700 tracking-tight">
+                      {formatPrice(calculateMonthly(product.price, creditTerm))} {t('common.currency')}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {terms.map(m => {
+                      const isActive = creditTerm === m;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setCreditTerm(m)}
+                          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                            isActive
+                              ? 'text-white shadow-md'
+                              : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                          }`}
+                          style={isActive ? { background: 'linear-gradient(135deg, #6a1cc7 0%, #460087 100%)' } : undefined}
+                        >
+                          {m} {lang === 'uz' ? 'oy' : 'мес'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Actions */}
+          {/* Actions — Savatga qo'shish (delivery date subtitle) + Favorite */}
           <div className="flex gap-3 mb-6">
             <button
               onClick={handleAddToCart}
               disabled={inCart}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-all ${
+              className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                 inCart
                   ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
+                  : 'text-white active:scale-[0.98] shadow-md hover:shadow-lg'
               }`}
+              style={!inCart ? { background: 'linear-gradient(135deg, #6a1cc7 0%, #460087 100%)' } : undefined}
             >
               {inCart ? (
-                <><Check className="w-5 h-5" /> {t('products.inCart')}</>
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="w-5 h-5" /> {t('products.inCart')}
+                </span>
               ) : (
-                <><ShoppingCart className="w-5 h-5" /> {t('products.addToCart')}</>
+                <>
+                  <div className="text-base leading-tight">{t('products.addToCart')}</div>
+                  <div className="text-xs font-normal opacity-90 mt-0.5">
+                    {formatDeliveryDate(product.deliveryDays ?? product.delivery_days ?? 3, lang)} {lang === 'uz' ? 'yetkazib beramiz' : 'доставим'}
+                  </div>
+                </>
               )}
             </button>
             <button
               onClick={() => toggleFavorite(product)}
-              className={`px-4 py-3 rounded-lg border transition-colors ${
+              className={`w-12 rounded-xl border transition-colors flex items-center justify-center ${
                 fav
                   ? 'bg-red-50 border-red-200 text-red-500'
-                  : 'bg-white border-gray-200 hover:bg-gray-50'
+                  : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-600'
               }`}
               aria-label="Favorite"
             >
               <Heart className={`w-5 h-5 ${fav ? 'fill-red-500' : ''}`} />
             </button>
           </div>
-
-          {/* Umumiy tavsif (narx va savat tugmasidan keyin) */}
-          {product.description?.[lang] && (
-            <div className="card p-5 mb-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                {lang === 'uz' ? 'Umumiy tavsif' : 'Общее описание'}
-              </h3>
-              <p className="text-gray-700 whitespace-pre-wrap">
-                {product.description[lang]}
-              </p>
-            </div>
-          )}
-
-          {/* Xususiyatlar (specifications) */}
-          <SpecificationsTable specifications={product.specifications} lang={lang} />
 
           {/* Benefits */}
           <div className="space-y-3">
@@ -283,6 +407,21 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Umumiy tavsif va Xususiyatlar — pastga ko'chirildi (to'liq kenglikda) */}
+      <div className="mt-8 space-y-4">
+        {product.description?.[lang] && (
+          <div className="card p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              {lang === 'uz' ? 'Umumiy tavsif' : 'Общее описание'}
+            </h3>
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {product.description[lang]}
+            </p>
+          </div>
+        )}
+        <SpecificationsTable specifications={product.specifications} lang={lang} />
       </div>
 
       {/* Sharhlar bo'limi */}

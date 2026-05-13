@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, Tag, X, Save, ListPlus } from 'lucide-react';
+import {
+  Plus, Pencil, Trash2, Search, Tag, X, Save, ListPlus, ChevronDown,
+  Home, Zap, Snowflake, Sparkles, Tv, Shirt, ChefHat, Lightbulb,
+  Smartphone, Laptop, Plug, Camera, Car, Hammer, Baby, Utensils, Headphones, Apple,
+} from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { categories, formatPrice } from '../../data/products';
@@ -21,6 +25,7 @@ const EMPTY_PRODUCT = {
   stock: '',
   rating: 4.5,
   creditMonths: 12,
+  deliveryDays: 3,
   badges: [],
   isPopular: false,
   specifications: [],
@@ -85,6 +90,7 @@ export default function AdminProducts() {
       badges: product.badges || [],
       isPopular: product.isPopular || false,
       conditionNote: product.conditionNote || '',
+      deliveryDays: product.deliveryDays ?? product.delivery_days ?? 3,
       storeId: product.storeId ?? product.store_id ?? null,
       store_id: product.storeId ?? product.store_id ?? null,
       specifications: (product.specifications || []).map(normalizeSpec),
@@ -128,6 +134,7 @@ export default function AdminProducts() {
       stock: Number(form.stock),
       rating: Number(form.rating) || 4.5,
       creditMonths: Number(form.creditMonths) || 12,
+      deliveryDays: Number(form.deliveryDays) || 3,
       onSale: form.onSale || false,
       specifications: cleanedSpecs,
     };
@@ -415,15 +422,10 @@ export default function AdminProducts() {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Kategoriya *
                   </label>
-                  <select
+                  <CategorySelect
                     value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value, subcategory: '' })}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                  >
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name.uz}</option>
-                    ))}
-                  </select>
+                    onChange={(catId) => setForm({ ...form, category: catId, subcategory: '' })}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -599,8 +601,8 @@ export default function AdminProducts() {
                 )}
               </div>
 
-              {/* Credit + Rating */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Credit + Delivery + Rating */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Muddatli to'lov (oy)
@@ -613,6 +615,20 @@ export default function AdminProducts() {
                     onChange={(e) => setForm({ ...form, creditMonths: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Yetkazib berish kuni
+                  </label>
+                  <select
+                    value={form.deliveryDays}
+                    onChange={(e) => setForm({ ...form, deliveryDays: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm bg-white"
+                  >
+                    <option value={1}>1 kun</option>
+                    <option value={3}>3 kun</option>
+                    <option value={5}>5 kun</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -796,6 +812,78 @@ export default function AdminProducts() {
             </form>
           </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+// Kategoriya ID → lucide-react icon (CDN'siz, ishonchli)
+const CATEGORY_ICONS = {
+  'large-appliances': Home,
+  'small-appliances': Zap,
+  'climate': Snowflake,
+  'cleaning': Sparkles,
+  'electronics': Tv,
+  'clothes-care': Shirt,
+  'kitchen': ChefHat,
+  'smart': Lightbulb,
+  'phones': Smartphone,
+  'computers': Laptop,
+  'accessories': Plug,
+  'security-cameras': Camera,
+  'auto-zone': Car,
+  'tools': Hammer,
+  'kids': Baby,
+  'kitchen-utensils': Utensils,
+  'beauty-health': Sparkles,
+  'gadgets': Headphones,
+  'used': Apple,
+};
+
+// Iconli kategoriya tanlash dropdown
+function CategorySelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const selected = categories.find(c => c.id === value);
+  const SelectedIcon = selected ? CATEGORY_ICONS[selected.id] : null;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm bg-white flex items-center gap-2"
+      >
+        {SelectedIcon && <SelectedIcon className="w-5 h-5 text-primary-600 flex-shrink-0" />}
+        <span className="flex-1 text-left">{selected?.name?.uz || '— tanlang —'}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-72 overflow-y-auto">
+            {categories.map(c => {
+              const Icon = CATEGORY_ICONS[c.id];
+              const isActive = value === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(c.id);
+                    setOpen(false);
+                  }}
+                  className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-gray-50 ${
+                    isActive ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  {Icon && <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-primary-600' : 'text-gray-500'}`} />}
+                  <span>{c.name.uz}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

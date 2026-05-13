@@ -77,6 +77,8 @@ export const categories = [
     shortName: { uz: 'Elektronika', ru: 'Электроника' },
     subcategories: [
       { id: 'tvs', name: { uz: 'Televizor', ru: 'Телевизоры' } },
+      { id: 'tv-tuners', name: { uz: 'TV-pristavkalar va tyunerlar', ru: 'Тюнеры и TV-приставки' } },
+      { id: 'tv-mounts', name: { uz: 'TV uchun kronshteyn', ru: 'Кронштейны для ТВ' } },
       { id: 'audio', name: { uz: 'Karnay va ovoz tizimi', ru: 'Колонки и аудиосистемы' } },
       { id: 'media-players', name: { uz: 'DVD va media pleyer', ru: 'DVD и медиаплееры' } },
       { id: 'photo-video-cameras', name: { uz: 'Foto va video kamera', ru: 'Фото и видеокамеры' } },
@@ -183,12 +185,118 @@ export const categories = [
       { id: 'outdoor-cams', name: { uz: 'Tashqi kuzatuv kameralari', ru: 'Уличные камеры' } },
       { id: 'wifi-cams', name: { uz: 'Wi-Fi kuzatuv kameralari', ru: 'Wi-Fi камеры' } },
       { id: 'ip-cams', name: { uz: 'IP kameralar', ru: 'IP-камеры' } },
+      { id: 'analog-cams', name: { uz: 'Analog kameralar', ru: 'Аналоговые камеры' } },
       { id: 'dvr-cams', name: { uz: 'DVR tizimli kameralar', ru: 'DVR-камеры' } },
       { id: 'nvr-cams', name: { uz: 'NVR tizimli kameralar', ru: 'NVR-камеры' } },
+      { id: 'dvr-nvr-recorders', name: { uz: 'Video-yozuvchi qurilmalar (DVR/NVR)', ru: 'Видеорегистраторы (DVR/NVR)' } },
       { id: '360-cams', name: { uz: 'Aylanuvchi (360°) kameralar', ru: 'Поворотные камеры (360°)' } },
+      { id: 'ptz-cams', name: { uz: 'PTZ kameralar (boshqariladigan aylanuvchi)', ru: 'PTZ-камеры (поворотные)' } },
+      { id: 'hidden-cams', name: { uz: 'Yashirin kameralar', ru: 'Скрытые камеры' } },
       { id: 'ir-cams', name: { uz: "Tungi ko'rish kameralar (IR kamera)", ru: 'Камеры ночного видения (IR)' } },
       { id: 'motion-cams', name: { uz: 'Harakatni sezuvchi kameralar', ru: 'Камеры с детектором движения' } },
       { id: 'cellular-cams', name: { uz: 'SIM-karta orqali ishlaydigan kameralar (4G/5G)', ru: 'Камеры с SIM-картой (4G/5G)' } },
+      { id: 'cam-kits', name: { uz: 'Kuzatuv komplektlari', ru: 'Комплекты видеонаблюдения' } },
+      { id: 'cam-hdds', name: { uz: 'Kuzatuv uchun qattiq disklar', ru: 'Жесткие диски для видеонаблюдения' } },
+      { id: 'cam-power', name: { uz: 'Quvvat bloklari', ru: 'Блоки питания' } },
+      { id: 'poe-switches', name: { uz: 'PoE kommutatorlari', ru: 'PoE коммутаторы' } },
+      { id: 'cam-cables', name: { uz: "Kabel va razyomlar", ru: 'Кабели и разъёмы' } },
+      { id: 'cam-mounts', name: { uz: "Kronshteyn va o'rnatish qismlari", ru: 'Кронштейны и крепления' } },
+      { id: 'access-control', name: { uz: 'Kirish nazorat tizimlari', ru: 'Системы контроля доступа' } },
+      { id: 'intercoms', name: { uz: 'Domofon va video-domofonlar', ru: 'Домофоны и видеодомофоны' } },
+      { id: 'alarm-systems', name: { uz: 'Xavfsizlik signalizatsiyasi', ru: 'Охранная сигнализация' } },
+      { id: 'cam-accessories', name: { uz: 'Kuzatuv aksessuarlari', ru: 'Аксессуары для видеонаблюдения' } },
+    ],
+  },
+  {
+    id: 'auto-zone',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Automobile/3D/automobile_3d.png',
+    name: { uz: 'Avtozona', ru: 'Автозона' },
+    shortName: { uz: 'Avto', ru: 'Авто' },
+    subcategories: [
+      { id: 'auto-tuning', name: { uz: 'Tyuning va xavfsizlik', ru: 'Тюнинг и безопасность' } },
+      { id: 'radar-detectors', name: { uz: 'Radar detektorlar', ru: 'Радар-детекторы' } },
+      { id: 'auto-alarms', name: { uz: 'Avtosignalizatsiyalar', ru: 'Автосигнализации' } },
+      { id: 'dash-cams', name: { uz: 'Video registratorlar', ru: 'Видеорегистраторы' } },
+      { id: 'auto-sound', name: { uz: 'Avto ovoz tizimi', ru: 'Автозвук' } },
+      { id: 'auto-speakers', name: { uz: 'Avtomobil akustikasi va kolonkalar', ru: 'Автомобильная акустика и колонки' } },
+      { id: 'auto-radios', name: { uz: 'Avtomagnitolalar', ru: 'Автомагнитолы' } },
+    ],
+  },
+  {
+    id: 'tools',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Hammer/3D/hammer_3d.png',
+    name: { uz: "Ta'mirlash uchun asboblar", ru: 'Инструменты для ремонта' },
+    shortName: { uz: 'Asboblar', ru: 'Инструменты' },
+    subcategories: [
+      { id: 'rotary-hammers', name: { uz: 'Perforatorlar', ru: 'Перфораторы' } },
+      { id: 'drills', name: { uz: 'Drelar', ru: 'Дрели' } },
+      { id: 'angle-grinders', name: { uz: 'Bolgarkalar', ru: 'Болгарки' } },
+      { id: 'lawn-mowers', name: { uz: "Maysazor o'rgich (gazonokosilka)", ru: 'Газонокосилки' } },
+      { id: 'measuring-tapes', name: { uz: "O'lchov ruletkalari", ru: 'Измерительные рулетки' } },
+      { id: 'cutting-saws', name: { uz: 'Kesuvchi va arrali asboblar', ru: 'Режущие и пильные инструменты' } },
+      { id: 'tool-sets', name: { uz: "Asbob to'plamlari", ru: 'Наборы инструментов' } },
+      { id: 'stabilizers', name: { uz: 'Stabilizatorlar', ru: 'Стабилизаторы' } },
+      { id: 'welding-machines', name: { uz: 'Payvandlash apparatlari', ru: 'Сварочные аппараты' } },
+      { id: 'screwdrivers', name: { uz: 'Shurupovertlar', ru: 'Шуруповерты' } },
+      { id: 'heating-tools', name: { uz: 'Isitish asboblari', ru: 'Приборы для нагрева' } },
+    ],
+  },
+  {
+    id: 'kids',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Teddy%20bear/3D/teddy_bear_3d.png',
+    name: { uz: 'Bolalar tovarlari', ru: 'Товары для детей' },
+    shortName: { uz: 'Bolalar', ru: 'Дети' },
+    subcategories: [
+      { id: 'electric-cars-kids', name: { uz: 'Elektromobillar', ru: 'Электромобили' } },
+      { id: 'scooters-bikes-kids', name: { uz: 'Bolalar samokati va velosipedlari', ru: 'Детские самокаты и велосипеды' } },
+      { id: 'pools', name: { uz: 'Basseynlar', ru: 'Бассейны' } },
+    ],
+  },
+  {
+    id: 'kitchen-utensils',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Pot%20of%20food/3D/pot_of_food_3d.png',
+    name: { uz: 'Oshxona buyumlari', ru: 'Товары для кухни' },
+    shortName: { uz: 'Oshxona buyumlari', ru: 'Кухня (посуда)' },
+    subcategories: [
+      { id: 'knives', name: { uz: 'Pichoqlar', ru: 'Ножи' } },
+      { id: 'cookware-sets', name: { uz: "Idish to'plamlari", ru: 'Наборы посуды' } },
+      { id: 'pots', name: { uz: 'Kastryulkalar', ru: 'Кастрюли' } },
+      { id: 'tea-kettles', name: { uz: 'Choynaklar', ru: 'Чайники' } },
+      { id: 'cauldrons', name: { uz: 'Qozonlar', ru: 'Казаны' } },
+      { id: 'cooking-sets', name: { uz: "Pishirish uchun idish to'plamlari", ru: 'Наборы посуды для приготовления' } },
+      { id: 'ladles', name: { uz: "Cho'michlar", ru: 'Половники' } },
+      { id: 'carafes', name: { uz: 'Grafinlar', ru: 'Графины' } },
+      { id: 'frying-pans', name: { uz: 'Skovorodalar', ru: 'Сковороды' } },
+    ],
+  },
+  {
+    id: 'beauty-health',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Lipstick/3D/lipstick_3d.png',
+    name: { uz: "Go'zallik va salomatlik", ru: 'Красота и здоровье' },
+    shortName: { uz: "Go'zallik", ru: 'Красота' },
+    subcategories: [
+      { id: 'electric-shavers', name: { uz: 'Elektr britvalar', ru: 'Электробритвы' } },
+      { id: 'curling-irons', name: { uz: "Plojkalar (sochni jingalak qiluvchi)", ru: 'Плойки' } },
+      { id: 'hair-straighteners', name: { uz: "Soch to'g'rilagichlar", ru: 'Выпрямители' } },
+      { id: 'trimmers', name: { uz: 'Trimmerlar', ru: 'Триммеры' } },
+      { id: 'beauty-hair-dryers', name: { uz: 'Fenlar', ru: 'Фены' } },
+      { id: 'hot-brushes', name: { uz: "Fen-cho'tkalar", ru: 'Фен-щетки' } },
+      { id: 'epilators', name: { uz: 'Epilyatorlar', ru: 'Эпиляторы' } },
+    ],
+  },
+  {
+    id: 'gadgets',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Wrapped%20gift/3D/wrapped_gift_3d.png',
+    name: { uz: 'Gadjetlar va aksessuarlar', ru: 'Гаджеты и аксессуары' },
+    shortName: { uz: 'Gadjetlar', ru: 'Гаджеты' },
+    subcategories: [
+      { id: 'chargers', name: { uz: 'Zaryadlovchi qurilmalar', ru: 'Зарядные устройства' } },
+      { id: 'fitness-bands', name: { uz: 'Fitnes-bilakuzuklar', ru: 'Фитнес-браслеты' } },
+      { id: 'headphones', name: { uz: 'Quloqchinlar', ru: 'Наушники' } },
+      { id: 'external-storage', name: { uz: 'Tashqi xotira (flesh, SSD)', ru: 'Внешние памяти' } },
+      { id: 'power-banks', name: { uz: 'Akkumulyatorlar (power bank)', ru: 'Аккумуляторы' } },
+      { id: 'tablets', name: { uz: 'Planshetlar', ru: 'Планшеты' } },
+      { id: 'smart-watches-gadgets', name: { uz: 'Smart-soatlar', ru: 'Смарт-часы' } },
     ],
   },
   {
@@ -258,4 +366,19 @@ export const formatPrice = (price) => {
 export const calculateMonthly = (price, months = 12) => {
   if (!months || months === 0) return 0;
   return Math.round(price / months);
+};
+
+// Oy nomlari — yetkazib berish sanasini formatlash uchun
+const MONTH_NAMES = {
+  uz: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'],
+  ru: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'],
+};
+
+// Yetkazib berish sanasini formatlash: bugun + days = "17-may"
+export const formatDeliveryDate = (days = 3, lang = 'uz') => {
+  const target = new Date();
+  target.setDate(target.getDate() + (Number(days) || 0));
+  const day = target.getDate();
+  const month = MONTH_NAMES[lang === 'ru' ? 'ru' : 'uz'][target.getMonth()];
+  return `${day}-${month}`;
 };
