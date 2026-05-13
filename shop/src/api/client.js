@@ -86,12 +86,22 @@ export const authApi = {
   login: (login, password) =>
     request('/users/login', { method: 'POST', body: { login, password } }),
   me: () => request('/users/me'),
-  // SMS OTP login (foydalanuvchi)
+  // SMS OTP — ro'yxatdan o'tish flow'i (foydalanuvchi)
   // phone — xalqaro format raqamlari, prefiksiz: "998901234567"
   smsOtpRequest: (phone) =>
     request('/users/sms-otp/request', { method: 'POST', body: { phone } }),
+  // Endi user yaratmaydi — registration_token qaytaradi
   smsOtpVerify: (phone, code) =>
     request('/users/sms-otp/verify', { method: 'POST', body: { phone, code } }),
+  // Registration tokeni + parol + ism bilan ro'yxatdan o'tishni yakunlash
+  registerComplete: (registration_token, password, full_name) =>
+    request('/users/register/complete', {
+      method: 'POST',
+      body: { registration_token, password, full_name },
+    }),
+  // Telefon + parol bilan hisobga kirish
+  phoneLogin: (phone, password) =>
+    request('/users/phone-login', { method: 'POST', body: { phone, password } }),
 };
 
 // ===== PRODUCTS =====
