@@ -110,6 +110,41 @@ export default function AdminProducts() {
     const allImages = (form.images && form.images.length > 0)
       ? form.images
       : (form.image ? [form.image] : []);
+
+    // Form-level validation: tasnif (description) va xususiyatlar (specifications)
+    // ixtiyoriy, qolgan asosiy maydonlar majburiy
+    if (!form.name.uz?.trim() || !form.name.ru?.trim()) {
+      setFormError('Nom (UZ va RU) ikkalasini ham kiriting');
+      return;
+    }
+    if (!form.category) {
+      setFormError('Kategoriyani tanlang');
+      return;
+    }
+    if (!form.subcategory) {
+      setFormError('Subkategoriyani tanlang');
+      return;
+    }
+    if (allImages.length === 0) {
+      setFormError("Kamida 1 ta rasm yuklang");
+      return;
+    }
+    if (form.price === '' || Number(form.price) <= 0) {
+      setFormError("Narxni kiriting (0 dan katta)");
+      return;
+    }
+    if (form.stock === '' || Number(form.stock) < 0) {
+      setFormError('Zaxirani kiriting');
+      return;
+    }
+    if (form.creditMonths === '' || Number(form.creditMonths) < 0) {
+      setFormError("Muddatli to'lov muddatini kiriting");
+      return;
+    }
+    if (form.rating === '' || Number(form.rating) < 1 || Number(form.rating) > 5) {
+      setFormError('Reyting 1 dan 5 gacha bo\'lishi kerak');
+      return;
+    }
     const cleanedSpecs = (form.specifications || [])
       .map(normalizeSpec)
       .filter(s => s.valueUz.trim() || s.valueRu.trim() || s.value2Uz.trim() || s.value2Ru.trim())
@@ -429,9 +464,10 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Subkategoriya
+                    Subkategoriya *
                   </label>
                   <select
+                    required
                     value={form.subcategory}
                     onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
@@ -605,9 +641,10 @@ export default function AdminProducts() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Muddatli to'lov (oy)
+                    Muddatli to'lov (oy) *
                   </label>
                   <input
+                    required
                     type="number"
                     min="0"
                     max="36"
@@ -618,9 +655,10 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Yetkazib berish kuni
+                    Yetkazib berish kuni *
                   </label>
                   <select
+                    required
                     value={form.deliveryDays}
                     onChange={(e) => setForm({ ...form, deliveryDays: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm bg-white"
@@ -632,9 +670,10 @@ export default function AdminProducts() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Reyting (1-5)
+                    Reyting (1-5) *
                   </label>
                   <input
+                    required
                     type="number"
                     min="1"
                     max="5"
@@ -647,11 +686,11 @@ export default function AdminProducts() {
               </div>
 
 
-              {/* Tasniflar (specifications) */}
+              {/* Tasniflar (specifications) — ixtiyoriy */}
               <div className="border-t border-gray-100 pt-4">
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    Tasniflar (xususiyatlar)
+                    Tasniflar (xususiyatlar) <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
                   </label>
                   <button
                     type="button"
