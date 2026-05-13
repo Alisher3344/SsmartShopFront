@@ -133,6 +133,10 @@ export default function AdminStores() {
   };
 
   const handleDelete = async (s) => {
+    if (s.is_main || s.isMain) {
+      alert("Asosiy magazinni o'chirib bo'lmaydi");
+      return;
+    }
     const staff = getStaff(s.id);
     const msg = staff
       ? `"${s.name}" magazinini va uning admini "@${staff.username}" ni o'chirishni tasdiqlaysizmi?`
@@ -175,8 +179,15 @@ export default function AdminStores() {
             <StoreIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p>Hozircha magazin yo'q</p>
           </div>
-        ) : stores.map(s => (
-          <div key={s.id} className={`card p-4 ${!s.active && 'opacity-60'}`}>
+        ) : stores.map(s => {
+          const isMain = s.is_main || s.isMain;
+          return (
+          <div key={s.id} className={`card p-4 relative ${!s.active && 'opacity-60'} ${isMain ? 'ring-2 ring-primary-500 ring-offset-1' : ''}`}>
+            {isMain && (
+              <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                ASOSIY
+              </span>
+            )}
             <div className="flex items-start gap-3 mb-3">
               <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
                 <StoreIcon className="w-6 h-6 text-primary-600" />
@@ -220,23 +231,28 @@ export default function AdminStores() {
             </div>
             <div className="flex gap-1 mt-3">
               <button
-                onClick={() => updateStore(s.id, { active: !s.active })}
+                onClick={() => !isMain && updateStore(s.id, { active: !s.active })}
+                disabled={isMain}
+                title={isMain ? "Asosiy magazin doim faol" : ''}
                 className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   s.active ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                } ${isMain ? 'opacity-60 cursor-not-allowed hover:bg-green-50' : ''}`}
               >
                 {s.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                 {s.active ? 'Faol' : 'Yopiq'}
               </button>
-              <button onClick={() => openEdit(s)} className="p-1.5 hover:bg-primary-50 hover:text-primary-700 rounded-md">
+              <button onClick={() => openEdit(s)} className="p-1.5 hover:bg-primary-50 hover:text-primary-700 rounded-md" title="Tahrirlash">
                 <Pencil className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => handleDelete(s)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-md">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              {!isMain && (
+                <button onClick={() => handleDelete(s)} className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-md" title="O'chirish">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Forma modal */}

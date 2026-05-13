@@ -540,29 +540,35 @@ export default function AdminProducts() {
               </div>
 
               {/* Magazin biriktirish (faqat super admin) */}
-              {isSuperAdmin && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Magazin
-                    <span className="text-xs text-gray-500 font-normal ml-2">
-                      (orphan mahsulotni qayta biriktirish uchun)
-                    </span>
-                  </label>
-                  <select
-                    value={form.storeId ?? form.store_id ?? ''}
-                    onChange={(e) => {
-                      const v = e.target.value === '' ? null : Number(e.target.value);
-                      setForm({ ...form, storeId: v, store_id: v });
-                    }}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
-                  >
-                    <option value="">— Magazin yo'q (default) —</option>
-                    {stores.map(s => (
-                      <option key={s.id} value={s.id}>{s.name}{!s.active && ' (yopiq)'}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {isSuperAdmin && (() => {
+                const mainStore = stores.find(s => s.is_main || s.isMain);
+                const currentStoreId = form.storeId ?? form.store_id ?? mainStore?.id ?? '';
+                return (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Magazin *
+                      <span className="text-xs text-gray-500 font-normal ml-2">
+                        (default: asosiy magazin)
+                      </span>
+                    </label>
+                    <select
+                      required
+                      value={currentStoreId}
+                      onChange={(e) => {
+                        const v = e.target.value === '' ? null : Number(e.target.value);
+                        setForm({ ...form, storeId: v, store_id: v });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
+                    >
+                      {stores.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}{(s.is_main || s.isMain) ? ' (asosiy)' : ''}{!s.active && ' (yopiq)'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
 
               {/* Mahsulot rasmlari (max 5 ta) */}
               <div>
