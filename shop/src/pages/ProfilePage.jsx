@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft, CreditCard, ArrowDownLeft, ArrowUpRight, Trash2 } from 'lucide-react';
-import { resolveImage, ordersApi, reviewsApi } from '../api/client';
+import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft, CreditCard, ArrowDownLeft, ArrowUpRight, Trash2, Camera, Save, AlertCircle, Check } from 'lucide-react';
+import { resolveImage, ordersApi, reviewsApi, authApi } from '../api/client';
 import FluentEmoji from '../components/FluentEmoji';
 
 const TABS = {
   orders:    { id: 'orders',    label: { uz: 'Buyurtmalarim',           ru: 'Мои заказы' },           icon: Package },
   payment:   { id: 'payment',   label: { uz: "Qulay to'lov",            ru: 'Удобная оплата' },       icon: CreditCard },
   favorites: { id: 'favorites', label: { uz: 'Sevimlilar',              ru: 'Избранное' },            icon: Star },
-  pickup:    { id: 'pickup',    label: { uz: 'Topshirish punkti',       ru: 'Пункт выдачи' },         icon: MapPin },
   reviews:   { id: 'reviews',   label: { uz: 'Sharhlar',                ru: 'Отзывы' },               icon: MessageSquare },
   contact:   { id: 'contact',   label: { uz: "Biz bilan bog'lanish",    ru: 'Связаться с нами' },     icon: Mail },
   info:      { id: 'info',      label: { uz: "Ma'lumotlarim",           ru: 'Мои данные' },           icon: Info },
+};
+
+// Telefon raqamini maskalash: oxirgi 4 raqam ko'rinadi, qolgani nuqta.
+// Masalan "998908999209" → "•••••••• 92 09"
+const maskPhone = (p) => {
+  const d = (p || '').replace(/\D/g, '');
+  if (d.length < 4) return p || '';
+  const last4 = d.slice(-4);
+  return `•••••••• ${last4.slice(0, 2)} ${last4.slice(2)}`;
 };
 
 // Kichik translation helper'lar (i18n locales fayllariga qo'shilmagan matnlar uchun)
@@ -132,10 +140,9 @@ export default function ProfilePage() {
       case 'orders': return <OrdersTab lang={lang} />;
       case 'payment': return <PaymentTab user={user} lang={lang} />;
       case 'favorites': return <FavoritesTab navigate={navigate} lang={lang} />;
-      case 'pickup': return <PickupTab lang={lang} />;
       case 'reviews': return <ReviewsTab lang={lang} />;
       case 'contact': return <ContactTab lang={lang} />;
-      case 'info': return <InfoTab user={user} lang={lang} />;
+      case 'info': return <InfoTab user={user} setUser={setUser} lang={lang} />;
       default: return null;
     }
   };
@@ -227,9 +234,10 @@ export default function ProfilePage() {
               )}
               <div className="min-w-0">
                 <div className="font-semibold text-gray-900 truncate">{displayName}</div>
-                {user.phone && <div className="text-xs text-gray-500 truncate">{user.phone}</div>}
-                {user.telegram_username && (
-                  <div className="text-xs text-[#229ED9]">@{user.telegram_username}</div>
+                {user.phone && (
+                  <div className="text-xs text-gray-500 truncate font-mono tracking-wider">
+                    {maskPhone(user.phone)}
+                  </div>
                 )}
               </div>
             </div>
@@ -712,26 +720,218 @@ function ReviewModal({ item, lang = 'uz', onClose, onSaved }) {
   );
 }
 
-function InfoTab({ user, lang = 'uz' }) {
-  const fields = [
-    { label: tr('fullName', lang), value: user.full_name || '—' },
-    { label: tr('phone', lang),    value: user.phone || '—' },
-    { label: tr('telegram', lang), value: user.telegram_username ? '@' + user.telegram_username : '—' },
-    { label: tr('email', lang),    value: user.email || '—' },
-  ];
+// Ism/Familiya auto-mask: faqat harflar + apostrof + tire + probel.
+// Birinchi harfni katta qiladi.
+const formatNamePart = (raw) => {
+  const cleaned = (raw || '').replace(/[^A-Za-zА-Яа-яЁёҲҳҒғҚқЎўҶҷ'\- ]/g, '').replace(/\s+/g, ' ');
+  if (!cleaned) return '';
+  return cleaned
+    .split(' ')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ''))
+    .join(' ');
+};
+
+function InfoTab({ user, setUser, lang = 'uz' }) {
+  const initialParts = (user.full_name || '').split(' ');
+  const [firstName, setFirstName] = useState(initialParts[0] || '');
+  const [lastName, setLastName] = useState(initialParts.slice(1).join(' ') || '');
+  const [birthDate, setBirthDate] = useState(user.birth_date || '');
+  const [photoUrl, setPhotoUrl] = useState(user.photo_url || '');
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const onPickPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setError('');
+    setSuccess('');
+    setUploading(true);
+    try {
+      const url = await authApi.uploadAvatar(file);
+      // Profilga darhol yozib qo'yamiz — backend eski faylni o'chiradi
+      const updated = await authApi.updateProfile({ photo_url: url });
+      setPhotoUrl(updated.photo_url || url);
+      // localStorage va sahifadagi user obyektini yangilaymiz
+      const newUser = { ...user, photo_url: updated.photo_url || url };
+      localStorage.setItem('ssmart_user', JSON.stringify(newUser));
+      window.dispatchEvent(new Event('ssmart-user-changed'));
+      if (setUser) setUser(newUser);
+      setSuccess(lang === 'ru' ? 'Фото обновлено' : 'Rasm yangilandi');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (e) {
+      setError(e.message || (lang === 'ru' ? 'Ошибка загрузки' : "Rasm yuklab bo'lmadi"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    setError('');
+    setSuccess('');
+    if (firstName.trim().length < 2) {
+      setError(lang === 'ru' ? 'Введите имя (мин. 2 символа)' : 'Ismni kiriting (kamida 2 belgi)');
+      return;
+    }
+    if (lastName.trim().length < 2) {
+      setError(lang === 'ru' ? 'Введите фамилию (мин. 2 символа)' : 'Familiyani kiriting (kamida 2 belgi)');
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = await authApi.updateProfile({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        birth_date: birthDate || null,
+      });
+      const newUser = { ...user, full_name: updated.full_name, birth_date: updated.birth_date };
+      localStorage.setItem('ssmart_user', JSON.stringify(newUser));
+      window.dispatchEvent(new Event('ssmart-user-changed'));
+      if (setUser) setUser(newUser);
+      setSuccess(lang === 'ru' ? 'Сохранено' : 'Saqlandi');
+      setTimeout(() => setSuccess(''), 2000);
+    } catch (e) {
+      setError(e.message || (lang === 'ru' ? 'Не удалось сохранить' : "Saqlab bo'lmadi"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const initial = (firstName || lastName || user.full_name || user.phone || '?')[0]?.toUpperCase();
 
   return (
     <div>
       <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 hidden lg:block">{tr('infoTitle', lang)}</h1>
-      <div className="card divide-y divide-gray-100">
-        {fields.map((f) => (
-          <div key={f.label} className="px-5 py-4 flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-500">{f.label}</span>
-            <span className="text-sm font-medium text-gray-900 text-right truncate">
-              {f.value}
-            </span>
+
+      {/* Avatar + foto upload */}
+      <div className="card p-5 mb-4 flex items-center gap-4">
+        <div className="relative flex-shrink-0">
+          {photoUrl ? (
+            <img src={resolveImage(photoUrl)} alt="" className="w-20 h-20 rounded-full object-cover" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-primary-600 text-white flex items-center justify-center text-2xl font-bold">
+              {initial}
+            </div>
+          )}
+          {uploading && (
+            <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <label className="inline-flex items-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg text-sm font-medium cursor-pointer">
+            <Camera className="w-4 h-4" />
+            {lang === 'ru' ? 'Загрузить фото' : 'Rasm yuklash'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onPickPhoto}
+              disabled={uploading}
+            />
+          </label>
+          <p className="text-xs text-gray-500 mt-1.5">
+            {lang === 'ru'
+              ? 'JPG, PNG, WEBP. Макс. 5 МБ. Старое фото удаляется автоматически.'
+              : 'JPG, PNG, WEBP. Maksimum 5 MB. Eski rasm avtomatik o\'chadi.'}
+          </p>
+        </div>
+      </div>
+
+      {/* Ism / Familiya / Tug'ilgan kun */}
+      <div className="card p-5 mb-4 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {lang === 'ru' ? 'Имя' : 'Ism'}
+            </label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(formatNamePart(e.target.value))}
+              autoComplete="given-name"
+              maxLength={120}
+              placeholder="Ali"
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:bg-white text-sm"
+            />
           </div>
-        ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {lang === 'ru' ? 'Фамилия' : 'Familiya'}
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(formatNamePart(e.target.value))}
+              autoComplete="family-name"
+              maxLength={120}
+              placeholder="Aliyev"
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:bg-white text-sm"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            {lang === 'ru' ? 'Дата рождения' : "Tug'ilgan kun"}
+          </label>
+          <input
+            type="date"
+            value={birthDate || ''}
+            onChange={(e) => setBirthDate(e.target.value)}
+            max={new Date().toISOString().slice(0, 10)}
+            min="1920-01-01"
+            className="w-full sm:max-w-[240px] px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:bg-white text-sm"
+          />
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 flex items-start gap-2">
+            <Check className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            {success}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={saveProfile}
+          disabled={saving}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50"
+        >
+          {saving ? (
+            <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          {lang === 'ru' ? 'Сохранить' : 'Saqlash'}
+        </button>
+      </div>
+
+      {/* Limit — Tez kunda */}
+      <div className="card p-5 flex items-center justify-between gap-3 opacity-90">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center flex-shrink-0">
+            <CreditCard className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-gray-900">Limit</div>
+            <div className="text-xs text-gray-500">
+              {lang === 'ru' ? 'Кредитный лимит для покупок' : "Xaridlar uchun kredit limiti"}
+            </div>
+          </div>
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 bg-amber-100 text-amber-800 rounded-full whitespace-nowrap">
+          {lang === 'ru' ? 'Скоро' : 'Tez kunda'}
+        </span>
       </div>
     </div>
   );

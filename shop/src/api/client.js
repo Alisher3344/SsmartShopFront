@@ -102,6 +102,16 @@ export const authApi = {
   // Telefon + parol bilan hisobga kirish
   phoneLogin: (phone, password) =>
     request('/users/phone-login', { method: 'POST', body: { phone, password } }),
+  // Profil yangilash (ism, familiya, tug'ilgan kun, rasm)
+  updateProfile: (data) =>
+    request('/users/me/profile', { method: 'PATCH', body: data, auth: 'user' }),
+  // Avatar yuklash — user token bilan
+  uploadAvatar: async (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await request('/upload/avatar', { method: 'POST', body: fd, isForm: true, auth: 'user' });
+    return res.url;
+  },
   // Parolni tiklash
   passwordResetRequest: (phone) =>
     request('/users/password-reset/request', { method: 'POST', body: { phone } }),
