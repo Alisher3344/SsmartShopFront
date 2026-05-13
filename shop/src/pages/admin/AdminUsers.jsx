@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Search, X, User as UserIcon, Phone, Lock, Save, Users as UsersIcon, AlertCircle, Check, ChevronRight } from 'lucide-react';
-import { adminUsersApi } from '../../api/client';
+import { adminUsersApi, resolveImage } from '../../api/client';
 
 const formatPhone = (p) => {
   if (!p) return '—';
@@ -113,9 +113,17 @@ export default function AdminUsers() {
               onClick={() => setSelected(u)}
               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold flex-shrink-0">
-                {(u.full_name || u.phone || '?')[0]?.toUpperCase()}
-              </div>
+              {u.photo_url ? (
+                <img
+                  src={resolveImage(u.photo_url)}
+                  alt=""
+                  className="w-10 h-10 rounded-full object-cover bg-gray-100 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold flex-shrink-0">
+                  {(u.full_name || u.phone || '?')[0]?.toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-gray-900 truncate">
                   {u.full_name || <span className="text-gray-400 italic">Ism kiritilmagan</span>}
@@ -223,9 +231,17 @@ function UserDetailModal({ user, onClose, onUpdated }) {
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-14 h-14 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xl">
-            {(user.full_name || user.phone || '?')[0]?.toUpperCase()}
-          </div>
+          {user.photo_url ? (
+            <img
+              src={resolveImage(user.photo_url)}
+              alt=""
+              className="w-14 h-14 rounded-full object-cover bg-gray-100"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xl">
+              {(user.full_name || user.phone || '?')[0]?.toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="text-xs text-gray-500">Foydalanuvchi #{user.id}</div>
             <div className="text-sm text-gray-700 flex items-center gap-1 mt-0.5">
