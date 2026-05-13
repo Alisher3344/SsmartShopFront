@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { Lock, User, AlertCircle, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../../context/AdminThemeContext';
+import { getCurrentHost, hostAllowsRole, isAdminRole, urlForRole } from '../../utils/adminAccess';
 
 function AdminLoginInner() {
   const { user, login, logout, loading: authLoading } = useAuth();
@@ -12,7 +13,7 @@ function AdminLoginInner() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!authLoading && user) return <Navigate to="/Tty0xssmart" replace />;
+  if (!authLoading && user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,11 +22,19 @@ function AdminLoginInner() {
     const result = await login(form.username, form.password);
     if (result.success) {
       const role = result.user?.role;
-      if (role !== 'admin' && role !== 'superadmin' && role !== 'staff') {
+      if (!isAdminRole(role)) {
         logout();
         setError("Bu hisob admin paneliga kirish huquqiga ega emas");
+      } else if (!hostAllowsRole(getCurrentHost(), role)) {
+        // Noto'g'ri subdomenga kirayapti — to'g'ri subdomenga yo'naltiramiz
+        const correctUrl = urlForRole(role);
+        if (correctUrl) {
+          window.location.replace(correctUrl);
+          return;
+        }
+        navigate('/');
       } else {
-        navigate('/Tty0xssmart');
+        navigate('/');
       }
     } else {
       setError(result.error);

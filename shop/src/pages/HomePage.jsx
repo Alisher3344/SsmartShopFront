@@ -20,12 +20,12 @@ export default function HomePage() {
   // Faqat zaxirada bor mahsulotlar
   const inStockProducts = products.filter((p) => p.stock > 0);
 
-  // "Ommabop mahsulotlar" — faqat super admin /Tty0xssmart/popular orqali
+  // "Ommabop mahsulotlar" — faqat super admin /popular orqali
   // tanlagan mahsulotlar (isPopular = true).
   const popularProducts = inStockProducts
     .filter((p) => p.isPopular)
     .slice(0, 8);
-  // "Chegirmalar" bo'limi — faqat super admin /Tty0xssmart/sales orqali aksiyaga
+  // "Chegirmalar" bo'limi — faqat super admin /sales orqali aksiyaga
   // qo'shgan mahsulotlar (onSale = true). "Aksiya" yorlig'i (badges.sale) —
   // faqat ko'rinish uchun, filterga ta'siri yo'q.
   const discountProducts = inStockProducts

@@ -34,7 +34,7 @@ export default function AdminSalesAdmins() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(null); // null=ro'yxat, {}=yangi, {...}=tahrir
 
-  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
+  if (!isSuperAdmin) return <Navigate to="/" replace />;
 
   const refresh = async () => {
     setLoading(true);
@@ -116,7 +116,7 @@ export default function AdminSalesAdmins() {
           Sotuv adminlari faqat <strong>Mahsulotlar</strong> va{" "}
           <strong>Reklama bannerlari</strong> bo'limlariga kira oladi. Ular{" "}
           <code className="bg-white px-1.5 py-0.5 rounded">
-            /Tty0xssmart/login
+            /login
           </code>{" "}
           orqali username va parol bilan kiradi.
         </div>

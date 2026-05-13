@@ -30,6 +30,14 @@ import AdminStores from './pages/admin/AdminStores';
 import AdminStaffStats from './pages/admin/AdminStaffStats';
 import AdminUsers from './pages/admin/AdminUsers';
 
+// Admin subdomenlar — shu hostnamelarda root URL admin paneliga olib boradi
+const ADMIN_HOSTS = new Set([
+  'ssmart-dashboard.ssmart.uz',
+  'ssmart-sotuv.ssmart.uz',
+]);
+const isAdminHost = typeof window !== 'undefined'
+  && ADMIN_HOSTS.has(window.location.hostname);
+
 // Sayt qatlami (header + footer bilan)
 function PublicLayout({ children }) {
   return (
@@ -42,6 +50,57 @@ function PublicLayout({ children }) {
   );
 }
 
+function AdminRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<AdminLoginPage />} />
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="banners" element={<AdminBanners />} />
+        <Route path="sales" element={<AdminSales />} />
+        <Route path="pickup-points" element={<AdminPickupPoints />} />
+        <Route path="sales-admins" element={<AdminSalesAdmins />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="low-stock" element={<AdminLowStock />} />
+        <Route path="popular" element={<AdminPopular />} />
+        <Route path="stores" element={<AdminStores />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="my-stats" element={<AdminStaffStats />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+
+function ShopRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+      <Route path="/b-u" element={<PublicLayout><BUPage /></PublicLayout>} />
+      <Route path="/catalog" element={<PublicLayout><CatalogPage /></PublicLayout>} />
+      <Route path="/product/:id" element={<PublicLayout><ProductPage /></PublicLayout>} />
+      <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
+      <Route path="/favorites" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
+      <Route path="/profile" element={<PublicLayout><ProfilePage /></PublicLayout>} />
+      <Route path="*" element={
+        <PublicLayout>
+          <NotFound />
+        </PublicLayout>
+      } />
+    </Routes>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="container-custom py-20 text-center">
+      <h1 className="text-4xl font-bold mb-2">404</h1>
+      <p className="text-gray-500">Sahifa topilmadi / Страница не найдена</p>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -49,41 +108,7 @@ function App() {
         <AdminDataProvider>
           <ShopProvider>
             <AuthGateProvider>
-            <Routes>
-              {/* Yashirin admin marshrutlar - /Tty0xssmart */}
-              <Route path="/Tty0xssmart/login" element={<AdminLoginPage />} />
-              <Route path="/Tty0xssmart" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="banners" element={<AdminBanners />} />
-                <Route path="sales" element={<AdminSales />} />
-                <Route path="pickup-points" element={<AdminPickupPoints />} />
-                <Route path="sales-admins" element={<AdminSalesAdmins />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="low-stock" element={<AdminLowStock />} />
-                <Route path="popular" element={<AdminPopular />} />
-                <Route path="stores" element={<AdminStores />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="my-stats" element={<AdminStaffStats />} />
-              </Route>
-
-              {/* Sayt routes — header/footer bilan */}
-              <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
-              <Route path="/b-u" element={<PublicLayout><BUPage /></PublicLayout>} />
-              <Route path="/catalog" element={<PublicLayout><CatalogPage /></PublicLayout>} />
-              <Route path="/product/:id" element={<PublicLayout><ProductPage /></PublicLayout>} />
-              <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
-              <Route path="/favorites" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
-              <Route path="/profile" element={<PublicLayout><ProfilePage /></PublicLayout>} />
-              <Route path="*" element={
-                <PublicLayout>
-                  <div className="container-custom py-20 text-center">
-                    <h1 className="text-4xl font-bold mb-2">404</h1>
-                    <p className="text-gray-500">Sahifa topilmadi / Страница не найдена</p>
-                  </div>
-                </PublicLayout>
-              } />
-            </Routes>
+              {isAdminHost ? <AdminRoutes /> : <ShopRoutes />}
             </AuthGateProvider>
           </ShopProvider>
         </AdminDataProvider>

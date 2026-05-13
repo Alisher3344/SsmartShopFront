@@ -1,14 +1,24 @@
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom';
 import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../../context/AdminThemeContext';
+import { getCurrentHost, hostAllowsRole, urlForRole } from '../../utils/adminAccess';
 
 function AdminLayoutInner() {
   const { user, logout, isAdmin, isSuperAdmin, loading } = useAuth();
   const { isDark, toggle } = useAdminTheme();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Foydalanuvchi noto'g'ri subdomenda bo'lsa to'g'ri joyga yo'naltirish
+  useEffect(() => {
+    if (loading || !user) return;
+    if (!hostAllowsRole(getCurrentHost(), user.role)) {
+      const correctUrl = urlForRole(user.role);
+      if (correctUrl) window.location.replace(correctUrl);
+    }
+  }, [loading, user]);
 
   if (loading) {
     return (
@@ -17,33 +27,42 @@ function AdminLayoutInner() {
       </div>
     );
   }
-  if (!user) return <Navigate to="/Tty0xssmart/login" replace />;
-  if (!isAdmin) return <Navigate to="/Tty0xssmart/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/login" replace />;
+
+  // Noto'g'ri subdomen — useEffect redirect qilguncha hech narsa ko'rsatmaymiz
+  if (!hostAllowsRole(getCurrentHost(), user.role)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const handleLogout = () => {
     logout();
-    navigate('/Tty0xssmart/login');
+    navigate('/login');
   };
 
   const role = user.role;
   const navItems = [
     // Faqat superadmin
-    { to: '/Tty0xssmart', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
+    { to: '/', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
     // Mahsulotlar — barcha admin rollar (superadmin, sotuv admin, staff)
-    { to: '/Tty0xssmart/products', label: 'Mahsulotlar', icon: Package, roles: ['superadmin', 'admin', 'staff'] },
-    { to: '/Tty0xssmart/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['superadmin', 'admin', 'staff'] },
-    { to: '/Tty0xssmart/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
+    { to: '/products', label: 'Mahsulotlar', icon: Package, roles: ['superadmin', 'admin', 'staff'] },
+    { to: '/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['superadmin', 'admin', 'staff'] },
+    { to: '/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
     // Buyurtmalar — barcha admin rollar
-    { to: '/Tty0xssmart/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['superadmin', 'admin', 'staff'] },
+    { to: '/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['superadmin', 'admin', 'staff'] },
     // Faqat staff (magazin admin) — o'z magazinining statistikasi
-    { to: '/Tty0xssmart/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
+    { to: '/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
     // Faqat superadmin
-    { to: '/Tty0xssmart/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
-    { to: '/Tty0xssmart/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'] },
+    { to: '/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
+    { to: '/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
+    { to: '/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
+    { to: '/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
+    { to: '/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
+    { to: '/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'] },
   ];
 
   const visibleNav = navItems.filter(item => item.roles.includes(role));
@@ -119,10 +138,13 @@ function AdminLayoutInner() {
 
         {/* Pastki bo'lim */}
         <div className="p-3 border-t border-gray-100 space-y-0.5">
-          <NavLink to="/" className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+          <a
+            href="https://ssmart.uz"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+          >
             <Home className="w-4 h-4" />
             <span>Saytga qaytish</span>
-          </NavLink>
+          </a>
 
           <button
             onClick={toggle}

@@ -38,7 +38,7 @@ export default function AdminPickupPoints() {
 
   const [adminPoint, setAdminPoint] = useState(null);
 
-  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
+  if (!isSuperAdmin) return <Navigate to="/" replace />;
 
   const openAdd = () => {
     setEditingId(null);

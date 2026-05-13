@@ -18,7 +18,7 @@ export default function AdminStaffStats() {
   const [error, setError] = useState('');
 
   // Faqat staff (magazin admin) uchun — boshqalar boshqa joyga
-  if (user?.role !== 'staff') return <Navigate to="/Tty0xssmart" replace />;
+  if (user?.role !== 'staff') return <Navigate to="/" replace />;
 
   const myStoreId = user?.storeId ?? user?.store_id;
 

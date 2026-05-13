@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  base: '/Ttp0xssmart/',
+  base: '/',
   plugins: [react()],
   cacheDir: 'node_modules/.vite-admin',
   clearScreen: false,

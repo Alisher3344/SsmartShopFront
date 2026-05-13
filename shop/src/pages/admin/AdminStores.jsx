@@ -46,7 +46,7 @@ export default function AdminStores() {
   const getStaff = (storeId) =>
     staffs.find(s => (s.storeId ?? s.store_id) === storeId);
 
-  if (!isSuperAdmin) return <Navigate to="/Tty0xssmart" replace />;
+  if (!isSuperAdmin) return <Navigate to="/" replace />;
 
   const openAdd = () => { setEditingId(null); setForm(EMPTY); setError(''); setShowForm(true); };
   const openEdit = (s) => {
