@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft, CreditCard, ArrowDownLeft, ArrowUpRight, Trash2 } from 'lucide-react';
 import { resolveImage, ordersApi, reviewsApi } from '../api/client';
 import FluentEmoji from '../components/FluentEmoji';
 
 const TABS = {
   orders:    { id: 'orders',    label: { uz: 'Buyurtmalarim',           ru: 'Мои заказы' },           icon: Package },
+  payment:   { id: 'payment',   label: { uz: "Qulay to'lov",            ru: 'Удобная оплата' },       icon: CreditCard },
   favorites: { id: 'favorites', label: { uz: 'Sevimlilar',              ru: 'Избранное' },            icon: Star },
   pickup:    { id: 'pickup',    label: { uz: 'Topshirish punkti',       ru: 'Пункт выдачи' },         icon: MapPin },
   reviews:   { id: 'reviews',   label: { uz: 'Sharhlar',                ru: 'Отзывы' },               icon: MessageSquare },
@@ -129,6 +130,7 @@ export default function ProfilePage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'orders': return <OrdersTab lang={lang} />;
+      case 'payment': return <PaymentTab user={user} lang={lang} />;
       case 'favorites': return <FavoritesTab navigate={navigate} lang={lang} />;
       case 'pickup': return <PickupTab lang={lang} />;
       case 'reviews': return <ReviewsTab lang={lang} />;
@@ -856,6 +858,392 @@ function LanguageTab() {
             <span className="flex-1">{l.label}</span>
             {current === l.id && <FluentEmoji name="check" size={18} />}
           </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ========================================================================
+// "Qulay to'lov" — sun'iy plastik karta + 12 oylik tranzaksiya tarixi
+// ========================================================================
+
+const cardStorageKey = (userId) => `ssmart_card_${userId}`;
+
+// Karta raqamini "XXXX XXXX XXXX XXXX" formatga keltirish
+const formatCardNumber = (digits) => {
+  const d = (digits || '').replace(/\D/g, '').slice(0, 16);
+  return d.match(/.{1,4}/g)?.join(' ') || '';
+};
+const maskCardNumber = (digits) => {
+  const d = (digits || '').replace(/\D/g, '');
+  if (d.length < 4) return d;
+  const last4 = d.slice(-4);
+  return `•••• •••• •••• ${last4}`;
+};
+
+// Muddat MM/YY ko'rinishi
+const formatExpiry = (digits) => {
+  const d = (digits || '').replace(/\D/g, '').slice(0, 4);
+  if (d.length <= 2) return d;
+  return `${d.slice(0, 2)}/${d.slice(2)}`;
+};
+
+// Karta amal qilish muddati: MM 01-12, YY 26-35 (joriy yil va 9 yildan oshmasin)
+const validateExpiry = (digits) => {
+  const d = (digits || '').replace(/\D/g, '');
+  if (d.length !== 4) return false;
+  const mm = parseInt(d.slice(0, 2), 10);
+  const yy = parseInt(d.slice(2, 4), 10);
+  if (mm < 1 || mm > 12) return false;
+  const now = new Date();
+  const curYY = now.getFullYear() % 100;
+  if (yy < curYY || yy > curYY + 10) return false;
+  // joriy oydan oldin bo'lmasin
+  if (yy === curYY && mm < (now.getMonth() + 1)) return false;
+  return true;
+};
+
+const validateCardNumber = (digits) => {
+  const d = (digits || '').replace(/\D/g, '');
+  return d.length === 16;
+};
+
+// Deterministik PRNG (mulberry32) — karta raqami so'nggi 8 raqami seed
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const fmtPriceUZS = (n) => new Intl.NumberFormat('uz-UZ').format(Math.round(n));
+
+const MONTHS_UZ = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+const MONTHS_RU = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+const CATEGORIES = [
+  { uz: 'Ssmart Shop',          ru: 'Ssmart Shop',         icon: 'cart',       kind: 'spend', minAmt: 80000,  maxAmt: 1800000 },
+  { uz: 'Korzinka',             ru: 'Korzinka',            icon: 'shopping',   kind: 'spend', minAmt: 50000,  maxAmt: 600000 },
+  { uz: 'Yandex Taxi',          ru: 'Яндекс Такси',        icon: 'taxi',       kind: 'spend', minAmt: 15000,  maxAmt: 90000 },
+  { uz: 'Beeline / Ucell',      ru: 'Beeline / Ucell',     icon: 'phone',      kind: 'spend', minAmt: 20000,  maxAmt: 200000 },
+  { uz: 'Kommunal to\'lov',     ru: 'Коммунальные',        icon: 'home',       kind: 'spend', minAmt: 80000,  maxAmt: 450000 },
+  { uz: 'Internet (UzOnline)',  ru: 'Интернет',            icon: 'internet',   kind: 'spend', minAmt: 60000,  maxAmt: 250000 },
+  { uz: 'Click / Payme P2P',    ru: 'Click / Payme P2P',   icon: 'transfer',   kind: 'spend', minAmt: 50000,  maxAmt: 800000 },
+  { uz: 'Bankomatdan yechildi', ru: 'Снятие наличных',     icon: 'cash',       kind: 'spend', minAmt: 200000, maxAmt: 2000000 },
+  { uz: 'Ish haqi',             ru: 'Зарплата',            icon: 'salary',     kind: 'income', minAmt: 3500000, maxAmt: 8500000 },
+  { uz: 'P2P o\'tkazma',        ru: 'P2P перевод',         icon: 'inbox',      kind: 'income', minAmt: 100000, maxAmt: 1500000 },
+];
+
+// Karta raqamidan oxirgi 8 raqamni seedga aylantiramiz, so'ng 12 oylik history yasaymiz
+function generateHistory(cardDigits) {
+  const seedStr = (cardDigits || '0').slice(-8) || '0';
+  const seed = parseInt(seedStr, 10) || 123456;
+  const rng = mulberry32(seed);
+
+  const now = new Date();
+  const months = [];
+  let runningBalance = Math.floor(rng() * 5000000) + 800000; // boshlang'ich balans
+
+  // 12 oylik (eng yangi oy birinchi)
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthLabelUz = `${MONTHS_UZ[d.getMonth()]} ${d.getFullYear()}`;
+    const monthLabelRu = `${MONTHS_RU[d.getMonth()]} ${d.getFullYear()}`;
+
+    const txCount = 6 + Math.floor(rng() * 10); // 6..15
+    const txs = [];
+    let monthIncome = 0;
+    let monthSpend = 0;
+
+    for (let j = 0; j < txCount; j++) {
+      const cat = CATEGORIES[Math.floor(rng() * CATEGORIES.length)];
+      const amt = Math.floor(cat.minAmt + rng() * (cat.maxAmt - cat.minAmt));
+      // Sanasi shu oy ichida
+      const day = 1 + Math.floor(rng() * 28);
+      const dateObj = new Date(d.getFullYear(), d.getMonth(), day);
+      txs.push({
+        id: `${i}-${j}`,
+        category: cat,
+        amount: amt,
+        kind: cat.kind,
+        date: dateObj,
+      });
+      if (cat.kind === 'income') monthIncome += amt;
+      else monthSpend += amt;
+    }
+    // Har oy uchun bitta ish haqi qo'shamiz (agar yo'q bo'lsa)
+    if (!txs.some(t => t.kind === 'income')) {
+      const salary = 4000000 + Math.floor(rng() * 3000000);
+      txs.push({
+        id: `${i}-salary`,
+        category: CATEGORIES.find(c => c.uz === 'Ish haqi'),
+        amount: salary,
+        kind: 'income',
+        date: new Date(d.getFullYear(), d.getMonth(), 5),
+      });
+      monthIncome += salary;
+    }
+    txs.sort((a, b) => b.date - a.date);
+    months.push({
+      key: `${d.getFullYear()}-${d.getMonth()}`,
+      labelUz: monthLabelUz,
+      labelRu: monthLabelRu,
+      income: monthIncome,
+      spend: monthSpend,
+      txs,
+    });
+    runningBalance += (monthIncome - monthSpend);
+  }
+  return { months, balance: runningBalance };
+}
+
+function loadCard(userId) {
+  try {
+    const raw = localStorage.getItem(cardStorageKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.digits || parsed.digits.length !== 16) return null;
+    return parsed;
+  } catch { return null; }
+}
+
+function PaymentTab({ user, lang = 'uz' }) {
+  const [card, setCard] = useState(() => loadCard(user.id));
+  const [showSetup, setShowSetup] = useState(false);
+
+  // Setup form state
+  const [digits, setDigits] = useState('');
+  const [expiryDigits, setExpiryDigits] = useState('');
+  const [error, setError] = useState('');
+
+  const isCardValid = validateCardNumber(digits);
+  const isExpiryValid = validateExpiry(expiryDigits);
+
+  const saveCard = () => {
+    setError('');
+    if (!isCardValid) {
+      setError(lang === 'ru' ? 'Введите 16-значный номер карты' : "16 xonali karta raqamini kiriting");
+      return;
+    }
+    if (!isExpiryValid) {
+      setError(lang === 'ru' ? 'Неверный срок (MM/YY)' : "Karta muddati noto'g'ri (MM/YY)");
+      return;
+    }
+    const data = {
+      digits,
+      expiry: expiryDigits,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(cardStorageKey(user.id), JSON.stringify(data));
+    setCard(data);
+    setShowSetup(false);
+    setDigits('');
+    setExpiryDigits('');
+  };
+
+  const removeCard = () => {
+    if (!confirm(lang === 'ru' ? 'Удалить карту?' : "Kartani o'chirishni tasdiqlaysizmi?")) return;
+    localStorage.removeItem(cardStorageKey(user.id));
+    setCard(null);
+  };
+
+  if (!card || showSetup) {
+    return (
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2 hidden lg:block">
+          {lang === 'ru' ? 'Удобная оплата' : "Qulay to'lov"}
+        </h1>
+        <p className="text-sm text-gray-500 mb-5">
+          {lang === 'ru'
+            ? 'Привяжите карту, чтобы видеть ваши расходы и поступления за последний год.'
+            : "O'tgan bir yillik xarajatlar va kirimlar tarixini ko'rish uchun kartani bog'lang."}
+        </p>
+
+        <div className="card max-w-md p-5 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {lang === 'ru' ? 'Номер карты' : 'Karta raqami'}
+            </label>
+            <div className="relative">
+              <CreditCard className="w-5 h-5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="cc-number"
+                value={formatCardNumber(digits)}
+                onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 16))}
+                placeholder="8600 0000 0000 0000"
+                className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base font-mono tracking-wider"
+              />
+            </div>
+          </div>
+
+          <div className="max-w-[160px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {lang === 'ru' ? 'Срок (MM/YY)' : 'Muddat (MM/YY)'}
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="cc-exp"
+              value={formatExpiry(expiryDigits)}
+              onChange={(e) => setExpiryDigits(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="MM/YY"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base font-mono text-center tracking-wider"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">{error}</div>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            {showSetup && card && (
+              <button
+                type="button"
+                onClick={() => { setShowSetup(false); setDigits(''); setExpiryDigits(''); setError(''); }}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium"
+              >
+                {lang === 'ru' ? 'Отмена' : 'Bekor qilish'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={saveCard}
+              disabled={!isCardValid || !isExpiryValid}
+              className="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {lang === 'ru' ? 'Сохранить' : 'Saqlash'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Karta saqlangan — plastik karta + tranzaksiyalar
+  const { months, balance } = generateHistory(card.digits);
+  const holder = (user.full_name || user.phone || 'CARDHOLDER').toUpperCase();
+
+  return (
+    <div>
+      <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 hidden lg:block">
+        {lang === 'ru' ? 'Удобная оплата' : "Qulay to'lov"}
+      </h1>
+
+      {/* Plastik karta */}
+      <div className="relative max-w-md mb-5">
+        <div
+          className="rounded-2xl p-5 text-white shadow-xl relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #4c1d95 0%, #6d28d9 45%, #db2777 100%)',
+            minHeight: '200px',
+          }}
+        >
+          <div
+            className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #fff, transparent 70%)' }}
+          />
+          <div className="flex items-start justify-between mb-7 relative">
+            <div className="text-xs uppercase tracking-wider opacity-80">SSMART Card</div>
+            <CreditCard className="w-7 h-7 opacity-80" />
+          </div>
+          <div className="font-mono text-lg sm:text-xl tracking-[0.18em] mb-5 relative">
+            {maskCardNumber(card.digits)}
+          </div>
+          <div className="flex items-end justify-between text-xs relative">
+            <div className="min-w-0">
+              <div className="opacity-70 text-[10px] uppercase tracking-wider mb-0.5">
+                {lang === 'ru' ? 'Владелец' : 'Egasi'}
+              </div>
+              <div className="font-semibold truncate">{holder}</div>
+            </div>
+            <div>
+              <div className="opacity-70 text-[10px] uppercase tracking-wider mb-0.5">
+                {lang === 'ru' ? 'Срок' : 'Muddat'}
+              </div>
+              <div className="font-mono font-semibold">{formatExpiry(card.expiry)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Balans */}
+      <div className="card p-4 mb-5 max-w-md flex items-center justify-between">
+        <div>
+          <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">
+            {lang === 'ru' ? 'Баланс' : 'Joriy balans'}
+          </div>
+          <div className="text-2xl font-bold text-gray-900">
+            {fmtPriceUZS(balance)} <span className="text-sm text-gray-500 font-normal">so'm</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={removeCard}
+          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+          title={lang === 'ru' ? 'Удалить' : "O'chirish"}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Oylik tranzaksiyalar */}
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">
+          {lang === 'ru' ? 'История за 12 месяцев' : "12 oylik tarix"}
+        </h2>
+        {months.map((m) => (
+          <details key={m.key} className="card overflow-hidden group">
+            <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between hover:bg-gray-50">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-gray-900">
+                  {lang === 'ru' ? m.labelRu : m.labelUz}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-3">
+                  <span className="text-green-700 flex items-center gap-0.5">
+                    <ArrowDownLeft className="w-3 h-3" /> +{fmtPriceUZS(m.income)}
+                  </span>
+                  <span className="text-red-700 flex items-center gap-0.5">
+                    <ArrowUpRight className="w-3 h-3" /> −{fmtPriceUZS(m.spend)}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
+            </summary>
+            <div className="divide-y divide-gray-100 border-t border-gray-100">
+              {m.txs.map((tx) => (
+                <div key={tx.id} className="px-4 py-2.5 flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      tx.kind === 'income'
+                        ? 'bg-green-50 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {tx.kind === 'income'
+                      ? <ArrowDownLeft className="w-4 h-4" />
+                      : <ArrowUpRight className="w-4 h-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {lang === 'ru' ? tx.category.ru : tx.category.uz}
+                    </div>
+                    <div className="text-[11px] text-gray-500">
+                      {tx.date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ', { day: '2-digit', month: 'short' })}
+                    </div>
+                  </div>
+                  <div className={`text-sm font-semibold ${tx.kind === 'income' ? 'text-green-700' : 'text-gray-900'}`}>
+                    {tx.kind === 'income' ? '+' : '−'}{fmtPriceUZS(tx.amount)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         ))}
       </div>
     </div>
