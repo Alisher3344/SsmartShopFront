@@ -177,7 +177,12 @@ export const ordersApi = {
   // Foydalanuvchi tokenidan foydalanadi
   create: (data) => request('/orders', { method: 'POST', body: data, auth: 'user' }),
   myOrders: () => request('/orders/my', { auth: 'user' }),
-  cancelMine: (id) => request(`/orders/${id}/cancel`, { method: 'POST', auth: 'user' }),
+  cancelMine: (id, reason) =>
+    request(`/orders/${id}/cancel`, {
+      method: 'POST',
+      auth: 'user',
+      body: reason ? { reason } : {},
+    }),
   // Admin tokeni
   list: (filters = {}) => {
     const qs = new URLSearchParams();
@@ -187,7 +192,11 @@ export const ordersApi = {
     return request(`/orders${s ? '?' + s : ''}`);
   },
   confirm: (id) => request(`/orders/${id}/confirm`, { method: 'POST' }),
-  cancel: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }),
+  cancel: (id, reason) =>
+    request(`/orders/${id}/cancel`, {
+      method: 'POST',
+      body: reason ? { reason } : {},
+    }),
 };
 
 // ===== SALES ADMINS (faqat superadmin) =====

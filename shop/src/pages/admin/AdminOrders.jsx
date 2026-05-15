@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { ordersApi, resolveImage } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
 
 const STATUS_TABS = [
+  { id: 'pending', label: "Kutilmoqda (qabul qilish kerak)", color: 'amber' },
   { id: 'confirmed', label: 'Tasdiqlangan (Punktga jo\'natish)', color: 'blue' },
   { id: 'ready', label: 'Punktda tayyor', color: 'green' },
   { id: 'delivered', label: 'Topshirilgan', color: 'gray' },
@@ -39,9 +40,11 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('confirmed');
+  const [activeTab, setActiveTab] = useState('pending');
   const [pickupFilter, setPickupFilter] = useState('all');
   const [actionId, setActionId] = useState(null);
+  const [cancelFormId, setCancelFormId] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const refresh = async () => {
     setLoading(true);
@@ -72,11 +75,22 @@ export default function AdminOrders() {
     }
   };
 
-  const handleCancel = async (id) => {
-    if (!confirm("Buyurtmani bekor qilishni tasdiqlaysizmi?")) return;
+  const openCancelForm = (id) => {
+    setCancelFormId(id);
+    setCancelReason('');
+  };
+
+  const closeCancelForm = () => {
+    setCancelFormId(null);
+    setCancelReason('');
+  };
+
+  const submitCancel = async (id) => {
     setActionId(id);
     try {
-      await ordersApi.cancel(id);
+      const reason = cancelReason.trim();
+      await ordersApi.cancel(id, reason || undefined);
+      closeCancelForm();
       await refresh();
     } catch (e) {
       alert("Bekor qilishda xato: " + (e.message || ''));
@@ -249,6 +263,70 @@ export default function AdminOrders() {
                     </div>
                     <div className="text-[10px] text-blue-600 text-center">
                       Bu kodni mahsulotga yopishtirib punktga yuboring
+                    </div>
+                  </div>
+                )}
+
+                {order.status === 'cancelled' && order.cancelReason && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                    <Info className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-red-800 mb-0.5">Bekor qilish sababi</div>
+                      <div className="text-sm text-red-900 break-words">{order.cancelReason}</div>
+                    </div>
+                  </div>
+                )}
+
+                {order.status === 'pending' && cancelFormId !== order.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
+                    <button
+                      onClick={() => handleConfirm(order.id)}
+                      disabled={actionId === order.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      <Check className="w-4 h-4" />
+                      Qabul qilish
+                    </button>
+                    <button
+                      onClick={() => openCancelForm(order.id)}
+                      disabled={actionId === order.id}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 hover:bg-red-50 text-red-700 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      <XIcon className="w-4 h-4" />
+                      Bekor qilish
+                    </button>
+                  </div>
+                )}
+
+                {order.status === 'pending' && cancelFormId === order.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                    <label className="block text-xs font-medium text-gray-700">
+                      Sabab <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
+                    </label>
+                    <textarea
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="Masalan: mahsulot tugagan, mijoz qo'ng'iroqqa javob bermayapti..."
+                      maxLength={500}
+                      rows={2}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:bg-white resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={closeCancelForm}
+                        disabled={actionId === order.id}
+                        className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50"
+                      >
+                        Yopish
+                      </button>
+                      <button
+                        onClick={() => submitCancel(order.id)}
+                        disabled={actionId === order.id}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                      >
+                        <XIcon className="w-4 h-4" />
+                        Bekor qilishni tasdiqlash
+                      </button>
                     </div>
                   </div>
                 )}

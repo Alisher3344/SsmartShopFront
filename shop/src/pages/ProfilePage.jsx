@@ -41,6 +41,7 @@ const TR = {
   noOrdersHint: { uz: "Hozircha bu turdagi buyurtmangiz yo'q", ru: 'Заказов этого типа пока нет' },
   cancel:     { uz: 'Bekor qilish',               ru: 'Отменить' },
   cancelConfirm: { uz: "Buyurtmani bekor qilishni tasdiqlaysizmi?", ru: 'Отменить заказ?' },
+  cancelReasonLabel: { uz: 'Bekor qilish sababi', ru: 'Причина отмены' },
   pickupCodeLabel: { uz: "Olib ketish kodi (punkt admin'ga ko'rsating):", ru: 'Код выдачи (покажите администратору ПВЗ):' },
   // Statuses
   sPending:   { uz: 'Buyurtmangiz tasdiqlanmoqda', ru: 'Ваш заказ обрабатывается' },
@@ -387,6 +388,20 @@ function OrdersTab({ lang = 'uz' }) {
                   <span className="flex-1">{tr(meta.trKey, lang)}</span>
                   <span className="text-xs opacity-75">#{order.id}</span>
                 </div>
+
+                {order.status === 'cancelled' && order.cancelReason && (
+                  <div className="mb-3 p-3 bg-red-50 border-2 border-red-300 rounded-lg flex items-start gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                      <Info className="w-4 h-4 text-red-700" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-red-700 mb-0.5">
+                        {tr('cancelReasonLabel', lang)}
+                      </div>
+                      <div className="text-sm text-red-900 break-words">{order.cancelReason}</div>
+                    </div>
+                  </div>
+                )}
 
                 {order.status === 'ready' && order.pickupCode && (
                   <div className="mb-3 p-3 bg-green-50 border-2 border-dashed border-green-300 rounded-lg text-center">
