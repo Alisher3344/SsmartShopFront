@@ -1,7 +1,11 @@
-// Mahsulotlarni subkategoriya bo'yicha round-robin tarzda aralashtirish.
-// Maqsad: katalog/asosiy sahifada qo'shni 4-5 ta karta bir xil
-// subkategoriyadan bo'lib qolmasligi, har xil bo'limlardan
-// almashinib chiqishi.
+// Mahsulotlarni subkategoriya BLOKLARI bo'yicha aralashtirish.
+// Maqsad: foydalanuvchi har xil bo'limlarni ko'rsin, lekin
+// bitta subkategoriya mahsulotlari birga ko'rinsin.
+//
+// Misol: "Oddiy tugmali telefonlar" (10 ta) birinchi blok,
+// keyin "Aqilli kamera" (5 ta) ikkinchi blok, ... Subkategoriya
+// blokining ketma-ketligi tasodifiy. Blok ichidagi mahsulotlar
+// asl tartibda (yangilari oldida) qoladi.
 
 function shuffleArray(arr) {
   const a = [...arr];
@@ -15,7 +19,8 @@ function shuffleArray(arr) {
 export function shuffleBySubcategory(products) {
   if (!Array.isArray(products) || products.length <= 1) return products || [];
 
-  // Subkategoriya kalit; subkategoriya yo'q bo'lsa kategoriya bo'yicha guruhlaymiz
+  // Subkategoriya bo'yicha guruhlash. Subkategoriya yo'q mahsulotlar uchun
+  // kategoriya kalitidan foydalanamiz.
   const groups = new Map();
   for (const p of products) {
     const key = p.subcategory || p.category || '__other__';
@@ -23,19 +28,8 @@ export function shuffleBySubcategory(products) {
     groups.get(key).push(p);
   }
 
-  // Har bir guruh ichida ham aralashtiramiz, shunda bir guruhdan
-  // ketma-ket olinganda ham tasodifiy chiqadi
-  const buckets = Array.from(groups.values()).map(shuffleArray);
-
-  const result = [];
-  while (buckets.some(b => b.length > 0)) {
-    // Har raundda guruhlar tartibi qaytadan aralashadi —
-    // shunda 1-mahsulot Smartfonlar, 2-si Kir yuvish, 3-si Smart soat
-    // kabi tasodifiy ketmaketlik chiqadi
-    const round = shuffleArray(buckets.filter(b => b.length > 0));
-    for (const b of round) {
-      result.push(b.shift());
-    }
-  }
-  return result;
+  // Subkategoriya bloklarining tartibini aralashtiramiz.
+  // Blok ichidagi mahsulotlar asl tartibda qoladi.
+  const blocks = shuffleArray(Array.from(groups.values()));
+  return blocks.flat();
 }
