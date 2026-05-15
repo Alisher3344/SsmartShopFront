@@ -4,9 +4,11 @@ import { useAdminData } from '../../context/AdminDataContext';
 import { ordersApi, resolveImage } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
 
+// "pickup_send" — virtual tab: pending + confirmed buyurtmalar (kelgan,
+// hali punktga yetib bormagan). Backend bittadan statusni qabul qiladi,
+// shuning uchun client'da ikkita so'rovni birlashtiramiz.
 const STATUS_TABS = [
-  { id: 'pending', label: "Kutilmoqda (qabul qilish kerak)", color: 'amber' },
-  { id: 'confirmed', label: 'Tasdiqlangan (Punktga jo\'natish)', color: 'blue' },
+  { id: 'pickup_send', label: "Punktga jo'natish", color: 'blue' },
   { id: 'ready', label: 'Punktda tayyor', color: 'green' },
   { id: 'delivered', label: 'Topshirilgan', color: 'gray' },
   { id: 'cancelled', label: 'Bekor qilingan', color: 'red' },
@@ -40,7 +42,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState('pickup_send');
   const [pickupFilter, setPickupFilter] = useState('all');
   const [actionId, setActionId] = useState(null);
   const [cancelFormId, setCancelFormId] = useState(null);
@@ -50,9 +52,20 @@ export default function AdminOrders() {
     setLoading(true);
     setError('');
     try {
-      const filters = { status: activeTab };
-      if (pickupFilter !== 'all') filters.pickupPointId = pickupFilter;
-      const list = await ordersApi.list(filters);
+      const base = pickupFilter !== 'all' ? { pickupPointId: pickupFilter } : {};
+      let list;
+      if (activeTab === 'pickup_send') {
+        // pending + confirmed birlashtirilgan ko'rinish
+        const [pending, confirmed] = await Promise.all([
+          ordersApi.list({ ...base, status: 'pending' }),
+          ordersApi.list({ ...base, status: 'confirmed' }),
+        ]);
+        list = [...pending, ...confirmed].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+      } else {
+        list = await ordersApi.list({ ...base, status: activeTab });
+      }
       setOrders(list);
     } catch (e) {
       setError(e.message || "Buyurtmalarni yuklab bo'lmadi");
@@ -298,7 +311,23 @@ export default function AdminOrders() {
                   </div>
                 )}
 
-                {order.status === 'pending' && cancelFormId === order.id && (
+                {order.status === 'confirmed' && cancelFormId !== order.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="text-[11px] text-gray-500 mb-2 text-center">
+                      Punkt admin mahsulot kodini kiritmaguncha buyurtma shu yerda turadi
+                    </div>
+                    <button
+                      onClick={() => openCancelForm(order.id)}
+                      disabled={actionId === order.id}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white border border-red-200 hover:bg-red-50 text-red-700 rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      <XIcon className="w-4 h-4" />
+                      Bekor qilish
+                    </button>
+                  </div>
+                )}
+
+                {(order.status === 'pending' || order.status === 'confirmed') && cancelFormId === order.id && (
                   <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
                     <label className="block text-xs font-medium text-gray-700">
                       Sabab <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
