@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info } from 'lucide-react';
-import { useAdminData } from '../../context/AdminDataContext';
+import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info, Eye } from 'lucide-react';
 import { ordersApi, resolveImage } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
 
@@ -38,33 +37,34 @@ function formatDate(s) {
 }
 
 export default function AdminOrders() {
-  const { pickupPoints } = useAdminData();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('pickup_send');
-  const [pickupFilter, setPickupFilter] = useState('all');
   const [actionId, setActionId] = useState(null);
   const [cancelFormId, setCancelFormId] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  // Sessiyada qaysi confirmed buyurtmalarning kodi ochiq turibdi.
+  // "Qabul qilish" bosilganda avtomatik qo'shiladi; sahifa reload bo'lsa
+  // ro'yxat tozalanadi — kodlar yana yashiringan holatga qaytadi.
+  const [revealedCodeIds, setRevealedCodeIds] = useState(() => new Set());
 
   const refresh = async () => {
     setLoading(true);
     setError('');
     try {
-      const base = pickupFilter !== 'all' ? { pickupPointId: pickupFilter } : {};
       let list;
       if (activeTab === 'pickup_send') {
         // pending + confirmed birlashtirilgan ko'rinish
         const [pending, confirmed] = await Promise.all([
-          ordersApi.list({ ...base, status: 'pending' }),
-          ordersApi.list({ ...base, status: 'confirmed' }),
+          ordersApi.list({ status: 'pending' }),
+          ordersApi.list({ status: 'confirmed' }),
         ]);
         list = [...pending, ...confirmed].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
       } else {
-        list = await ordersApi.list({ ...base, status: activeTab });
+        list = await ordersApi.list({ status: activeTab });
       }
       setOrders(list);
     } catch (e) {
@@ -74,18 +74,32 @@ export default function AdminOrders() {
     }
   };
 
-  useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeTab, pickupFilter]);
+  useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeTab]);
 
   const handleConfirm = async (id) => {
     setActionId(id);
     try {
       await ordersApi.confirm(id);
+      // Qabul qilish bosilganda kod avtomatik ochiladi
+      setRevealedCodeIds(prev => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
       await refresh();
     } catch (e) {
       alert("Tasdiqlashda xato: " + (e.message || ''));
     } finally {
       setActionId(null);
     }
+  };
+
+  const revealCode = (id) => {
+    setRevealedCodeIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   };
 
   const openCancelForm = (id) => {
@@ -132,32 +146,6 @@ export default function AdminOrders() {
           Yangilash
         </button>
       </div>
-
-      {/* Punkt filtri */}
-      {pickupPoints.length > 1 && (
-        <div className="mb-4 flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-gray-600">Punkt:</span>
-          <button
-            onClick={() => setPickupFilter('all')}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-              pickupFilter === 'all' ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200'
-            }`}
-          >
-            Barchasi
-          </button>
-          {pickupPoints.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setPickupFilter(p.id)}
-              className={`text-xs px-3 py-1.5 rounded-full font-medium ${
-                pickupFilter === p.id ? 'bg-gray-900 text-white' : 'bg-white border border-gray-200'
-              }`}
-            >
-              {p.name?.uz}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Status tablari */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
@@ -266,7 +254,7 @@ export default function AdminOrders() {
                   </span>
                 </div>
 
-                {order.status === 'confirmed' && order.transitCode && (
+                {order.status === 'confirmed' && order.transitCode && revealedCodeIds.has(order.id) && (
                   <div className="mt-3 p-3 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
                     <div className="text-xs text-blue-700 mb-1 font-medium flex items-center gap-1.5">
                       <FluentEmoji name="package" size={12} /> Mahsulot kodi (yorliq) — punktga jo'natish uchun:
@@ -312,10 +300,19 @@ export default function AdminOrders() {
                 )}
 
                 {order.status === 'confirmed' && cancelFormId !== order.id && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className="text-[11px] text-gray-500 mb-2 text-center">
+                  <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                    <div className="text-[11px] text-gray-500 text-center">
                       Punkt admin mahsulot kodini kiritmaguncha buyurtma shu yerda turadi
                     </div>
+                    {!revealedCodeIds.has(order.id) && order.transitCode && (
+                      <button
+                        onClick={() => revealCode(order.id)}
+                        className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Mahsulot kodini ko'rsatish
+                      </button>
+                    )}
                     <button
                       onClick={() => openCancelForm(order.id)}
                       disabled={actionId === order.id}
