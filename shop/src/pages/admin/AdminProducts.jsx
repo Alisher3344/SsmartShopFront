@@ -61,15 +61,12 @@ export default function AdminProducts() {
   const [formLang, setFormLang] = useState('uz');
 
   // Staff (magazin admin): faqat o'z magazinining mahsulotlari
-  // Admin (sotuv admin): faqat magazinga bog'lanmagan (default) mahsulotlar
-  // Superadmin: hammasi
+  // Admin (sotuv admin) va Superadmin: hammasi
   const myStoreId = user?.storeId ?? user?.store_id;
   const isStaff = user?.role === 'staff';
   const baseProducts = isStaff
     ? products.filter(p => (p.storeId ?? p.store_id) === myStoreId)
-    : isSuperAdmin
-      ? products
-      : products.filter(p => !(p.storeId ?? p.store_id));
+    : products;
 
   const filtered = baseProducts
     .filter(p => filterCategory === 'all' || p.category === filterCategory)
