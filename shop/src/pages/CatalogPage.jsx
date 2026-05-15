@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, SlidersHorizontal, ChevronRight, X } from 'lucide-react';
@@ -7,6 +7,7 @@ import FluentEmoji from '../components/FluentEmoji';
 import { findCategoryById, findSubcategoryById } from '../data/products';
 import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
 import { useAdminData } from '../context/AdminDataContext';
+import { shuffleBySubcategory } from '../utils/productShuffle';
 
 export default function CatalogPage() {
   const { t, i18n } = useTranslation();
@@ -61,22 +62,30 @@ export default function CatalogPage() {
   const currentSubcategory = activeSubcategory ? findSubcategoryById(activeSubcategory) : null;
 
   // Filtrlash — faqat zaxirada bor mahsulotlar
-  const filtered = products
-    .filter(p => p.stock > 0)
-    .filter(p => activeCategory === 'all' || p.category === activeCategory)
-    .filter(p => !activeSubcategory || p.subcategory === activeSubcategory)
-    .filter(p => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return p.name[lang].toLowerCase().includes(q) ||
-             p.description[lang].toLowerCase().includes(q);
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
-      if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'rating') return (b.avgRating || 0) - (a.avgRating || 0);
-      return 0;
-    });
+  const filtered = useMemo(() => {
+    const base = products
+      .filter(p => p.stock > 0)
+      .filter(p => activeCategory === 'all' || p.category === activeCategory)
+      .filter(p => !activeSubcategory || p.subcategory === activeSubcategory)
+      .filter(p => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return p.name[lang].toLowerCase().includes(q) ||
+               p.description[lang].toLowerCase().includes(q);
+      });
+
+    if (sortBy === 'price-asc') return [...base].sort((a, b) => a.price - b.price);
+    if (sortBy === 'price-desc') return [...base].sort((a, b) => b.price - a.price);
+    if (sortBy === 'rating') return [...base].sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+
+    // sortBy === 'popular' (default). "Barcha mahsulotlar" tanlangan
+    // va qidiruv/subkategoriya filteri yo'q bo'lsa — subkategoriyalar
+    // bo'yicha aralashtirib chiqaramiz (turli bo'limlar almashinib).
+    if (activeCategory === 'all' && !activeSubcategory && !searchQuery) {
+      return shuffleBySubcategory(base);
+    }
+    return base;
+  }, [products, activeCategory, activeSubcategory, searchQuery, sortBy, lang]);
 
   const handleCategoryChange = (catId) => {
     setActiveCategory(catId);

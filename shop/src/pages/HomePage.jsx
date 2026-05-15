@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from '../components/ProductCard';
 import PromoCarousel from '../components/PromoCarousel';
 import { useAdminData } from '../context/AdminDataContext';
+import { shuffleBySubcategory } from '../utils/productShuffle';
 import MIcon from '../components/MIcon';
 import FluentEmoji from '../components/FluentEmoji';
 
@@ -37,7 +38,14 @@ export default function HomePage() {
     ...popularProducts.map(p => p.id),
     ...discountProducts.map(p => p.id),
   ]);
-  const otherProducts = inStockProducts.filter(p => !usedIds.has(p.id));
+  // Subkategoriyalar bo'yicha aralashtirib chiqaramiz — qator-qator
+  // bir xil bo'limdan mahsulotlar bo'lib turmasligi uchun. useMemo
+  // tartibni "Yana ko'rish" bosilganda qayta o'zgarmasligini ta'minlaydi.
+  const otherProducts = useMemo(
+    () => shuffleBySubcategory(inStockProducts.filter(p => !usedIds.has(p.id))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [products, popularProducts.length, discountProducts.length],
+  );
 
   const features = [
     { icon: 'local_shipping', title: { uz: "Tez yetkazib berish", ru: "Быстрая доставка" }, desc: { uz: "1-3 kun ichida", ru: "За 1-3 дня" } },
