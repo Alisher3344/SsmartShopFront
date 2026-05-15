@@ -52,7 +52,7 @@ export default function AdminDashboard() {
             {isSuperAdmin ? 'Super Admin Panel' : 'Admin Panel'}
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight inline-flex items-center gap-2">
-            Salom, <span className="admin-gradient-text">{user.name}</span> <FluentEmoji name="wave" size={32} />
+            Salom, <span className="admin-gradient-text">{user.name}</span>
           </h1>
           <p className="text-gray-500 text-sm mt-2">
             {isSuperAdmin
