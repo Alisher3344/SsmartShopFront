@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Package, Tag, Image as ImageIcon, Users, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
+import { adminUsersApi } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
 
 export default function AdminDashboard() {
   const { user, isSuperAdmin } = useAuth();
   const { products, banners, saleProducts, activeBanners } = useAdminData();
+  const [usersCount, setUsersCount] = useState(null);
+
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    adminUsersApi.list()
+      .then(list => setUsersCount(Array.isArray(list) ? list.length : 0))
+      .catch(() => setUsersCount(0));
+  }, [isSuperAdmin]);
 
   // Faqat super admin Dashboard ko'radi — qolganlar (admin/staff) Mahsulotlarga
   if (!isSuperAdmin) return <Navigate to="/products" replace />;
@@ -17,6 +27,8 @@ export default function AdminDashboard() {
   const stats = [
     { label: 'Jami mahsulotlar', value: products.length, icon: Package,
       color: 'bg-gradient-to-br from-blue-50 to-blue-100 text-blue-700 ring-1 ring-blue-200/60' },
+    { label: 'Foydalanuvchilar', value: usersCount ?? '…', icon: Users,
+      color: 'bg-gradient-to-br from-purple-50 to-violet-100 text-purple-700 ring-1 ring-violet-200/60' },
     { label: 'Aksiyada', value: saleProducts.length, icon: Tag,
       color: 'bg-gradient-to-br from-orange-50 to-amber-100 text-orange-700 ring-1 ring-amber-200/60' },
     { label: 'Faol bannerlar', value: activeBanners.length, icon: ImageIcon,
@@ -51,7 +63,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {stats.map((stat, idx) => (
           <div key={idx} className="admin-stat card p-5">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 shadow-sm ${stat.color}`}>
