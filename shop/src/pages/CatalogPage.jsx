@@ -92,10 +92,13 @@ export default function CatalogPage() {
     setActiveSubcategory(''); // Subcategory'ni reset qilamiz
   };
 
+  // Mobil "Katalog" landing: filtr yo'q paytda — vertikal kategoriya ro'yxati
+  const isMobileBrowse = activeCategory === 'all' && !activeSubcategory && !searchQuery;
+
   return (
     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-1 text-sm text-gray-500 mb-4 overflow-x-auto pb-1">
+      <div className={`flex items-center gap-1 text-sm text-gray-500 mb-4 overflow-x-auto pb-1 ${isMobileBrowse ? 'hidden md:flex' : ''}`}>
         <Link to="/" className="hover:text-primary-600 whitespace-nowrap">{t('nav.home')}</Link>
         <ChevronRight className="w-3 h-3 flex-shrink-0" />
         <Link to="/catalog" className="hover:text-primary-600 whitespace-nowrap">{t('nav.catalog')}</Link>
@@ -113,18 +116,40 @@ export default function CatalogPage() {
         )}
       </div>
 
-      <h1 className="text-2xl md:text-3xl font-bold mb-1">
+      <h1 className={`text-2xl md:text-3xl font-bold mb-1 ${isMobileBrowse ? 'hidden md:block' : ''}`}>
         {currentSubcategory
           ? currentSubcategory.name[lang]
           : currentCategory
             ? currentCategory.name[lang]
             : t('products.all')}
       </h1>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className={`text-sm text-gray-500 mb-6 ${isMobileBrowse ? 'hidden md:block' : ''}`}>
         {filtered.length} {t('products.items')}
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6">
+      {/* Mobil "Katalog" landing — faqat ekran <768px va filtr yo'q paytda */}
+      {isMobileBrowse && (
+        <div className="md:hidden">
+          <h2 className="text-base font-semibold mb-3">{t('nav.categories')}</h2>
+          <ul className="bg-white rounded-lg border border-gray-100 divide-y divide-gray-100 overflow-hidden">
+            {categories.map(cat => (
+              <li key={cat.id}>
+                <button
+                  type="button"
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 active:bg-gray-50 text-left"
+                >
+                  <img src={cat.icon} alt="" className="w-8 h-8 object-contain flex-shrink-0" />
+                  <span className="flex-1 text-sm font-medium text-gray-900">{cat.name[lang]}</span>
+                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className={`grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-6 ${isMobileBrowse ? 'hidden md:grid' : ''}`}>
         {/* Sidebar - desktop */}
         <aside className="hidden lg:block">
           <div className="sticky top-24 space-y-4">
