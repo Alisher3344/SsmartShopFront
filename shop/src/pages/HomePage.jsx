@@ -15,7 +15,7 @@ const STEP = 10; // xl'da 5 × 2 = 10 (2 qator)
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
-  const { products, saleProducts } = useAdminData();
+  const { products, loading } = useAdminData();
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
 
   // Faqat zaxirada bor mahsulotlar
@@ -77,6 +77,13 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Loading spinner — mahsulot bo'limlari o'rniga ko'rsatiladi */}
+      {loading && products.length === 0 && (
+        <section className="container-custom py-20 flex justify-center">
+          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </section>
+      )}
 
       {/* Popular — faqat ommabop mahsulot bor bo'lsa */}
       {popularProducts.length > 0 && (

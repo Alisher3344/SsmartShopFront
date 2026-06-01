@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info, Eye } from 'lucide-react';
 import { ordersApi, resolveImage } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
+import { MyIdBadge } from '../../components/MyIdCard';
 
 // "pickup_send" — virtual tab: pending + confirmed buyurtmalar (kelgan,
 // hali punktga yetib bormagan). Backend bittadan statusni qabul qiladi,
@@ -200,6 +201,7 @@ export default function AdminOrders() {
                   <div className="flex items-center gap-2">
                     <UserIcon className="w-3.5 h-3.5 text-gray-400" />
                     <span className="font-medium">{order.customerName || '—'}</span>
+                    <MyIdBadge user={{ myid_verified_at: order.customerMyidVerifiedAt }} size="xs" />
                   </div>
                   {order.customerPhone && (
                     <a

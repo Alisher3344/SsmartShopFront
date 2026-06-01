@@ -13,6 +13,8 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ProfilePage from './pages/ProfilePage';
+import MyIdSuccessPage from './pages/MyIdSuccessPage';
+import MyIdFailPage from './pages/MyIdFailPage';
 
 // Admin pages
 import AdminLayout from './pages/admin/AdminLayout';
@@ -83,6 +85,9 @@ function ShopRoutes() {
       <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
       <Route path="/favorites" element={<PublicLayout><FavoritesPage /></PublicLayout>} />
       <Route path="/profile" element={<PublicLayout><ProfilePage /></PublicLayout>} />
+      {/* MyID OAuth callback'idan keyin — Header/Footer'siz, alohida fullscreen */}
+      <Route path="/auth/myid/success" element={<MyIdSuccessPage />} />
+      <Route path="/auth/myid/fail" element={<MyIdFailPage />} />
       <Route path="*" element={
         <PublicLayout>
           <NotFound />

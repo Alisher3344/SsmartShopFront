@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, X, User as UserIcon, Phone, Lock, Save, Users as UsersIcon, AlertCircle, Check, ChevronRight, Trash2 } from 'lucide-react';
 import { adminUsersApi, resolveImage } from '../../api/client';
+import MyIdCard, { MyIdBadge } from '../../components/MyIdCard';
 
 const formatPhone = (p) => {
   if (!p) return '—';
@@ -130,8 +131,11 @@ export default function AdminUsers() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-gray-900 truncate">
-                  {u.full_name || <span className="text-gray-400 italic">Ism kiritilmagan</span>}
+                <div className="font-medium text-gray-900 truncate flex items-center gap-1.5">
+                  <span className="truncate">
+                    {u.full_name || <span className="text-gray-400 italic">Ism kiritilmagan</span>}
+                  </span>
+                  <MyIdBadge user={u} size="sm" />
                 </div>
                 <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                   <Phone className="w-3 h-3" />
@@ -241,7 +245,7 @@ function UserDetailModal({ user, onClose, onUpdated, onDeleted }) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-md p-6 relative shadow-xl"
+        className="bg-white rounded-2xl w-full max-w-lg p-6 relative shadow-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -367,6 +371,11 @@ function UserDetailModal({ user, onClose, onUpdated, onDeleted }) {
             {success}
           </div>
         )}
+
+        {/* MyID — agar tasdiqlangan bo'lsa to'liq ma'lumotlar (admin readonly) */}
+        <div className="mt-4">
+          <MyIdCard user={user} compact={false} hideUnverified isOwn={false} />
+        </div>
 
         {/* Foydalanuvchini butunlay o'chirish */}
         <div className="border-t border-gray-100 pt-4 mt-4">

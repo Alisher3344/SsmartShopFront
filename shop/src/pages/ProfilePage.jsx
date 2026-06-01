@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { Package, MessageSquare, Info, Tag, LogOut, Clock, CheckCircle2, XCircle, MapPin, Star, Send, X, Mail, Globe, ChevronRight, ArrowLeft, CreditCard, ArrowDownLeft, ArrowUpRight, Trash2, Camera, Save, AlertCircle, Check } from 'lucide-react';
 import { resolveImage, ordersApi, reviewsApi, authApi } from '../api/client';
 import FluentEmoji from '../components/FluentEmoji';
+import MyIdCard from '../components/MyIdCard';
+import { isMyIdVerified } from '../lib/myid';
 
 const TABS = {
   orders:    { id: 'orders',    label: { uz: 'Buyurtmalarim',           ru: 'Мои заказы' },           icon: Package },
@@ -815,6 +817,7 @@ function InfoTab({ user, setUser, lang = 'uz' }) {
   };
 
   const initial = (firstName || lastName || user.full_name || user.phone || '?')[0]?.toUpperCase();
+  const verified = isMyIdVerified(user);
 
   return (
     <div>
@@ -856,7 +859,10 @@ function InfoTab({ user, setUser, lang = 'uz' }) {
         </div>
       </div>
 
-      {/* Ism / Familiya / Tug'ilgan kun */}
+      {/* Ism / Familiya / Tug'ilgan kun — MyID tasdiqlangan bo'lsa yashiramiz,
+          chunki MyID section pastida o'sha ma'lumotlar to'liq ko'rinadi va
+          MyID rasmiy davlat manbai sifatida ustun keladi. */}
+      {!verified && (
       <div className="card p-5 mb-4 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -930,6 +936,10 @@ function InfoTab({ user, setUser, lang = 'uz' }) {
           {lang === 'ru' ? 'Сохранить' : 'Saqlash'}
         </button>
       </div>
+      )}
+
+      {/* MyID status + ma'lumotlar — oddiy user uchun qisqartirilgan ko'rinish */}
+      <MyIdCard user={user} lang={lang} compact={user.role === 'user'} isOwn />
 
       {/* Limit — Tez kunda */}
       <div className="card p-5 flex items-center justify-between gap-3 opacity-90">
@@ -951,6 +961,7 @@ function InfoTab({ user, setUser, lang = 'uz' }) {
     </div>
   );
 }
+
 
 function FavoritesTab({ navigate, lang = 'uz' }) {
   return (

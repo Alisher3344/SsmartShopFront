@@ -6,6 +6,8 @@ import { useAuthGate } from '../context/AuthGateContext';
 import { useAdminData } from '../context/AdminDataContext';
 import { resolveImage } from '../api/client';
 import MIcon from './MIcon';
+import { MyIdBadge } from './MyIdCard';
+import { isMyIdVerified } from '../lib/myid';
 
 // localStorage'dan joriy foydalanuvchini olish (subscriptionsiz, biroz primitiv)
 const useCurrentUser = () => {
@@ -206,21 +208,31 @@ export default function Header() {
               className="hidden sm:flex items-center gap-2 px-2 py-1.5 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label={t('nav.profile')}
             >
-              {currentUser?.photo_url ? (
-                <img
-                  src={resolveImage(currentUser.photo_url)}
-                  alt=""
-                  className="w-7 h-7 rounded-full object-cover"
-                />
-              ) : (
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                  currentUser ? 'bg-primary-600 text-white text-xs font-bold' : 'bg-gray-100 text-gray-700'
-                }`}>
-                  {currentUser
-                    ? (userDisplayName?.[0] || 'U').toUpperCase()
-                    : <MIcon name="person" size={18} />}
-                </div>
-              )}
+              <div className="relative">
+                {currentUser?.photo_url ? (
+                  <img
+                    src={resolveImage(currentUser.photo_url)}
+                    alt=""
+                    className="w-7 h-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                    currentUser ? 'bg-primary-600 text-white text-xs font-bold' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {currentUser
+                      ? (userDisplayName?.[0] || 'U').toUpperCase()
+                      : <MIcon name="person" size={18} />}
+                  </div>
+                )}
+                {isMyIdVerified(currentUser) && (
+                  <span
+                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-white rounded-full flex items-center justify-center"
+                    title="MyID orqali tasdiqlangan"
+                  >
+                    <MyIdBadge user={currentUser} size="xs" tooltip={false} />
+                  </span>
+                )}
+              </div>
               {currentUser && (
                 <span className="text-sm font-medium text-gray-900 truncate max-w-[100px]">
                   {userDisplayName}

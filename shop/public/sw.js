@@ -1,5 +1,5 @@
 // Smart.uz Service Worker — network-first, eski cache avtomatik tozalanadi
-const CACHE_NAME = 'ssmart-v3';
+const CACHE_NAME = 'ssmart-v4';
 const urlsToCache = ['/', '/index.html'];
 
 self.addEventListener('install', (event) => {
