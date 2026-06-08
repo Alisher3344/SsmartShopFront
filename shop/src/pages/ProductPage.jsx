@@ -152,7 +152,7 @@ export default function ProductPage() {
             onMouseLeave={() => isLgUp && setIsPaused(false)}
           >
             {hasMultiple ? (
-              <div className="relative overflow-hidden rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] group">
+              <div className="media-frame relative overflow-hidden rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] group">
                 {/* Karusel sliding effekti — lg+ da auto-aylantiriladi, mobilda faqat qo'l bilan */}
                 <div
                   className="flex h-full transition-transform duration-700 ease-in-out"
@@ -217,7 +217,7 @@ export default function ProductPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] flex items-center justify-center overflow-hidden">
+              <div className="media-frame rounded-xl bg-gray-50 aspect-[3/4] max-h-[70vh] lg:aspect-auto lg:max-h-none lg:h-[620px] flex items-center justify-center overflow-hidden">
                 <img
                   src={resolveImage(activeImage || product.image)}
                   alt={product.name[lang]}
@@ -300,10 +300,10 @@ export default function ProductPage() {
           )}
 
           {/* Price + Credit + Actions — SSMART brand style */}
-          <div className="card p-5 mb-6">
+          <div className="card summary-premium p-5 mb-6">
             {/* Narx */}
             <div className="flex items-baseline gap-3 mb-3">
-              <span className="text-3xl font-extrabold text-primary-700 tracking-tight">
+              <span className="price-display text-3xl font-extrabold text-primary-700 tracking-tight">
                 {formatPrice(product.price)} {t('common.currency')}
               </span>
             </div>
@@ -322,7 +322,7 @@ export default function ProductPage() {
                     {lang === 'uz' ? "Oyiga to'lov" : 'В месяц'}
                   </div>
                   <div className="mb-4">
-                    <span className="text-3xl font-extrabold text-primary-700 tracking-tight">
+                    <span className="price-display text-3xl font-extrabold text-primary-700 tracking-tight">
                       {formatPrice(calculateMonthly(product.price, creditTerm))} {t('common.currency')}
                     </span>
                   </div>
@@ -370,9 +370,8 @@ export default function ProductPage() {
               className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                 inCart
                   ? 'bg-green-50 text-green-700 border border-green-200'
-                  : 'text-white active:scale-[0.98] shadow-md hover:shadow-lg'
+                  : 'btn-cart'
               }`}
-              style={!inCart ? { background: 'linear-gradient(135deg, #6a1cc7 0%, #460087 100%)' } : undefined}
             >
               {inCart ? (
                 <span className="flex items-center justify-center gap-2">
@@ -386,14 +385,14 @@ export default function ProductPage() {
             </button>
             <button
               onClick={() => toggleFavorite(product)}
-              className={`w-12 rounded-xl border transition-colors flex items-center justify-center ${
+              className={`w-12 rounded-xl border transition-all flex items-center justify-center hover:-translate-y-0.5 active:scale-95 ${
                 fav
                   ? 'bg-red-50 border-red-200 text-red-500'
-                  : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-600'
+                  : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-600'
               }`}
               aria-label="Favorite"
             >
-              <Heart className={`w-5 h-5 ${fav ? 'fill-red-500' : ''}`} />
+              <Heart className={`w-5 h-5 transition-transform ${fav ? 'fill-red-500 scale-110' : ''}`} />
             </button>
           </div>
 

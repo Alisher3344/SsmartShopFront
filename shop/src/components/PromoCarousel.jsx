@@ -108,16 +108,16 @@ export default function PromoCarousel() {
   };
 
   return (
-    <section className="container-custom pt-3 sm:pt-4">
+    <section className="container-custom pt-4 sm:pt-6">
       <div
-        className="relative group"
+        className="promo-stage relative group"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[1240/413] bg-gray-100 shadow-sm">
+        <div className="promo-frame relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[1240/413] bg-gray-100 shadow-sm">
           {/* Slidelar tasmasi — gorizontal, transform bilan suriladi */}
           <div
             className="absolute inset-0 flex"

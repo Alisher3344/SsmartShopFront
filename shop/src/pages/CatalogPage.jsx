@@ -116,7 +116,7 @@ export default function CatalogPage() {
         )}
       </div>
 
-      <h1 className={`text-2xl md:text-3xl font-bold mb-1 ${isMobileBrowse ? 'hidden md:block' : ''}`}>
+      <h1 className={`section-title text-2xl md:text-3xl font-bold mb-1 ${isMobileBrowse ? 'hidden md:block' : ''}`}>
         {currentSubcategory
           ? currentSubcategory.name[lang]
           : currentCategory
@@ -322,8 +322,18 @@ export default function CatalogPage() {
 
           {/* Products */}
           {loading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="card overflow-hidden w-full">
+                  <div className="skeleton aspect-[3/4] rounded-none" />
+                  <div className="p-2.5 space-y-2">
+                    <div className="skeleton h-3 w-full" />
+                    <div className="skeleton h-3 w-2/3" />
+                    <div className="skeleton h-4 w-1/2 mt-1" />
+                    <div className="skeleton h-8 w-full rounded-xl mt-2" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 text-gray-500">
@@ -332,7 +342,7 @@ export default function CatalogPage() {
               <p className="text-sm">{t('products.notFoundDesc')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+            <div className="reveal-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
               {filtered.map(product => (
                 <ProductCard key={product.id} product={product} variant="catalog" />
               ))}

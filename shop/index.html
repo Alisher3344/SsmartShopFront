@@ -10,7 +10,7 @@
     <link rel="shortcut icon" href="/favicon-32.png" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <meta name="theme-color" content="#2563eb" />
+    <meta name="theme-color" content="#460087" />
     <meta name="description" content="SSMART - O'zbekistondagi onlayn do'kon. Maishiy texnika, smart qurilmalar va aksessuarlar. Muddatli to'lov bilan." />
 
     <!-- PWA -->
@@ -22,14 +22,62 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="preload" href="/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Title -->
     <title>SSMART - Onlayn do'kon</title>
+
+    <!-- Boshlang'ich yuklash ekrani (FOUC / layout siljishini berkitadi) -->
+    <style>
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        opacity: 1;
+        transition: opacity .45s ease;
+        will-change: opacity;
+      }
+      #app-splash.hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      #app-splash .splash-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #ece6f5;
+        border-top-color: #460087;
+        border-radius: 50%;
+        animation: splash-spin .8s linear infinite;
+      }
+      @keyframes splash-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- React tayyor + ma'lumot yuklangach yo'qoladi (SplashGate) -->
+    <div id="app-splash">
+      <div class="splash-spinner"></div>
+    </div>
+    <script>
+      window.__hideSplash = function () {
+        var s = document.getElementById('app-splash');
+        if (!s || s.classList.contains('hide')) return;
+        s.classList.add('hide');
+        setTimeout(function () { if (s && s.parentNode) s.parentNode.removeChild(s); }, 500);
+      };
+      // Xavfsizlik — React signal bermasa ham 7s dan keyin yopamiz (osilib qolmasin)
+      setTimeout(function () { window.__hideSplash(); }, 7000);
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

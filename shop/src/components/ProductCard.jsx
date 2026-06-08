@@ -63,12 +63,12 @@ export default function ProductCard({ product, variant = 'home' }) {
         {/* Chap yuqori — sinf harfi (B/U) va/yoki chegirma */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
           {usedGrade && (
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs tracking-tight shadow-md ${usedGrade.iconBg}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs tracking-tight shadow-md ring-1 ring-black/5 ${usedGrade.iconBg}`}>
               {usedGrade.letter}
             </div>
           )}
           {discount > 0 && (
-            <div className="bg-red-500 text-white text-[11px] font-bold px-2 py-1 rounded-md shadow-md text-center">
+            <div className="bg-gradient-to-br from-red-500 to-rose-600 text-white text-[11px] font-extrabold px-2 py-1 rounded-lg shadow-md text-center ring-1 ring-white/20">
               −{discount}%
             </div>
           )}
@@ -92,7 +92,7 @@ export default function ProductCard({ product, variant = 'home' }) {
 
         <button
           onClick={() => toggleFavorite(product)}
-          className="absolute top-2 right-2 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-10"
+          className="absolute top-2 right-2 w-9 h-9 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white hover:scale-110 active:scale-95 transition-all duration-200 shadow-sm ring-1 ring-black/5 z-10"
           aria-label="Favorite"
         >
           <MIcon
@@ -133,20 +133,22 @@ export default function ProductCard({ product, variant = 'home' }) {
         {/* Narx bloki - har doim bir xil balandlikda */}
         <div className="mb-2">
           {/* Asosiy narx */}
-          <div className="text-[15px] font-bold text-gray-900 leading-tight">
-            {formatPrice(product.price)} {t('common.currency')}
+          <div className="tnum price-display text-[16px] font-extrabold text-gray-900 leading-tight tracking-tight">
+            {formatPrice(product.price)} <span className="text-[11px] font-semibold text-gray-400">{t('common.currency')}</span>
           </div>
 
           {/* Eski narx - har doim joy egallaydi */}
-          <div className="text-[11px] text-gray-400 line-through h-4 leading-4">
+          <div className="tnum text-[11px] text-gray-400 line-through h-4 leading-4">
             {product.oldPrice ? `${formatPrice(product.oldPrice)} ${t('common.currency')}` : ''}
           </div>
 
           {/* Oylik to'lov */}
-          <div className="text-[11px] text-primary-600 h-4 leading-4">
-            {product.creditMonths > 0
-              ? `${formatPrice(calculateMonthly(product.price, product.creditMonths))} ${t('common.currency')}${t('products.perMonth')}`
-              : ''}
+          <div className="h-4 leading-4">
+            {product.creditMonths > 0 && (
+              <span className="tnum inline-flex items-center text-[11px] font-semibold text-primary-700 bg-primary-50 rounded px-1.5 py-px">
+                {`${formatPrice(calculateMonthly(product.price, product.creditMonths))} ${t('common.currency')}${t('products.perMonth')}`}
+              </span>
+            )}
           </div>
         </div>
 
@@ -154,10 +156,10 @@ export default function ProductCard({ product, variant = 'home' }) {
         <button
           onClick={handleAddToCart}
           disabled={inCart}
-          className={`mt-auto w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          className={`mt-auto w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all ${
             inCart
               ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-primary-600 text-white hover:bg-primary-700 active:scale-95'
+              : 'btn-cart'
           }`}
         >
           {inCart ? (

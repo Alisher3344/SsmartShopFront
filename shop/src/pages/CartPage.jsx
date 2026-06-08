@@ -134,7 +134,7 @@ export default function CartPage() {
 
   return (
     <div className="container-custom py-6 animate-fade-in">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6">{t('cart.title')}</h1>
+      <h1 className="section-title text-2xl md:text-3xl font-bold mb-6">{t('cart.title')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Items */}
@@ -337,7 +337,7 @@ export default function CartPage() {
           </div>
 
           {/* Total */}
-          <div className="card p-4">
+          <div className="card summary-premium p-4 lg:sticky lg:top-24 h-fit">
             <div className="space-y-2 mb-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t('cart.products')}</span>
@@ -348,9 +348,9 @@ export default function CartPage() {
                 <span>{deliveryFee === 0 ? t('cart.free') : `${formatPrice(deliveryFee)} ${t('common.currency')}`}</span>
               </div>
             </div>
-            <div className="border-t pt-3 flex justify-between font-bold text-lg mb-4">
+            <div className="border-t pt-3 flex justify-between items-baseline font-bold text-lg mb-4">
               <span>{t('cart.total')}</span>
-              <span>{formatPrice(total)} {t('common.currency')}</span>
+              <span className="tnum price-display text-xl text-primary-700">{formatPrice(total)} <span className="text-xs font-semibold text-gray-400">{t('common.currency')}</span></span>
             </div>
 
             {/* Foydalanuvchi ma'lumotlari (login bo'lgan bo'lsa) - readonly */}

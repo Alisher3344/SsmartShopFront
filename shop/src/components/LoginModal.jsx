@@ -413,20 +413,13 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             <form onSubmit={phoneLogin} className="space-y-4">
               <PhoneField value={phoneDigits} onChange={handlePhoneChange} />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    placeholder="Parolni kiriting"
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                label="Parol"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="Parolni kiriting"
+              />
 
               <ErrorBox text={error} action={errorAction} />
 
@@ -527,21 +520,14 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             </p>
 
             <form onSubmit={savePassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    placeholder="Yangi parol"
-                    autoFocus
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                label="Parol"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Yangi parol"
+                autoFocus
+              />
 
               {/* Parol talablari ko'rsatkichlari */}
               <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
@@ -711,21 +697,14 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             </p>
 
             <form onSubmit={completeReset} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Yangi parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    placeholder="Yangi parol"
-                    autoFocus
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                label="Yangi parol"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Yangi parol"
+                autoFocus
+              />
 
               <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
                 <PwdHint ok={pwdChecks.length}>Kamida 6 belgi</PwdHint>
@@ -830,6 +809,143 @@ function PwdHint({ ok, children }) {
     <div className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-700' : 'text-gray-500'}`}>
       <Check className={`w-3.5 h-3.5 ${ok ? 'text-green-600' : 'text-gray-300'}`} />
       <span>{children}</span>
+    </div>
+  );
+}
+
+// "Ko'z" tugmasi — qorachiq sichqoncha kursorini kuzatadi (desktop). Sensorli/kichik
+// ekranda kursor yo'q, shuning uchun ko'z text (chap) tomonga qarab turadi.
+// Bosilganda pirpiraydi; yopiqda ustidan chiziq tortilgan, qorachiq xira (CSS: index.css).
+function EyeToggle({ show, onToggle }) {
+  const pupilRef = useRef(null);
+  const targetRef = useRef({ x: -2.8, y: 0.6 }); // qarash maqsadi (default: text/chap)
+  const posRef = useRef({ x: -2.8, y: 0.6 });     // joriy silliq pozitsiya
+  const rafRef = useRef(0);
+
+  // Desktop + kursor (mouse/trackpad) bo'lsagina kuzatamiz.
+  // any-pointer:fine -> sensorli laptoplarda ham sichqoncha bo'lsa ishlaydi.
+  const MQ = '(min-width: 1024px) and (any-pointer: fine)';
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MQ).matches,
+  );
+  const labelText = show ? "Parolni yashirish" : "Parolni ko'rsatish";
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia(MQ);
+    const onChange = () => setIsDesktop(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    const MAX_X = 3;
+    const MAX_Y = 2.2;
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const EASE = reduce ? 1 : 0.18; // lerp tezligi (reduced-motion -> darhol)
+
+    // Kichik/sensorli ekran: kursor yo'q -> qorachiq text (chap) tomonga qaraydi.
+    if (!isDesktop) targetRef.current = { x: -2.8, y: 0.6 };
+
+    // Uzluksiz rAF lerp: joriy pozitsiyani maqsadga silliq yaqinlashtiradi va
+    // transformni TO'G'RIDAN-TO'G'RI DOMga yozadi (React re-render YO'Q -> qotish yo'q).
+    // CSS transform-transition ham yo'q -> qarama-qarshilik yo'q.
+    const tick = () => {
+      const p = posRef.current;
+      const t = targetRef.current;
+      const dx = t.x - p.x;
+      const dy = t.y - p.y;
+      p.x += dx * EASE;
+      p.y += dy * EASE;
+      const el = pupilRef.current;
+      if (el) el.style.transform = `translate(${p.x.toFixed(2)}px, ${p.y.toFixed(2)}px)`;
+      // Maqsadga yetmaguncha aylanadi; yetgach to'xtaydi (CPU tejaladi).
+      rafRef.current = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
+        ? requestAnimationFrame(tick)
+        : 0;
+    };
+    const ensureLoop = () => {
+      if (!rafRef.current) rafRef.current = requestAnimationFrame(tick);
+    };
+
+    const onMove = (e) => {
+      // Kursorning EKRAN (viewport) bo'yicha pozitsiyasi -1..1: chap->-1, o'ng->+1.
+      const nx = (e.clientX / window.innerWidth) * 2 - 1;
+      const ny = (e.clientY / window.innerHeight) * 2 - 1;
+      targetRef.current = {
+        x: Math.max(-1, Math.min(1, nx)) * MAX_X,
+        y: Math.max(-1, Math.min(1, ny)) * MAX_Y,
+      };
+      ensureLoop();
+    };
+
+    ensureLoop(); // boshlang'ich pozitsiyaga silliq joylashish
+    if (isDesktop) window.addEventListener('mousemove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
+  }, [isDesktop]);
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={labelText}
+      aria-pressed={show}
+      title={labelText}
+      className={`eye-toggle ${show ? 'is-open text-primary-600' : 'text-gray-400'} absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:text-primary-600 transition-colors`}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="eye-svg w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {/* Ko'z konturi (almond) */}
+        <path
+          className="eye-lid"
+          d="M1.6 12S5.2 5.4 12 5.4 22.4 12 22.4 12 18.8 18.6 12 18.6 1.6 12 1.6 12z"
+        />
+        {/* Harakatlanuvchi qism (iris halqa + qorachiq + nur) — kursorni kuzatadi.
+            transform JS rAF lerp'da butun guruhga yoziladi. */}
+        <g ref={pupilRef} className="eye-iris">
+          <circle cx="12" cy="12" r="4.1" fill="currentColor" fillOpacity="0.22" stroke="none" />
+          <circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none" />
+          <circle cx="13.3" cy="10.8" r="0.85" fill="#fff" stroke="none" />
+        </g>
+        {/* Yashirin holatda diagonal chiziq */}
+        <line className="eye-slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" />
+      </svg>
+    </button>
+  );
+}
+
+// Parol input + animatsiyali ko'z (ko'rsatish/yashirish). PhoneField uslubida.
+function PasswordField({ label, value, onChange, placeholder, autoComplete, autoFocus }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="relative">
+        <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
+        />
+        <EyeToggle show={show} onToggle={() => setShow((s) => !s)} />
+      </div>
     </div>
   );
 }

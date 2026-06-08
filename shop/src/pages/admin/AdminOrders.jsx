@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info, Eye } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, MapPin, Phone, User as UserIcon, RefreshCw, Check, X as XIcon, Info, Eye, Printer } from 'lucide-react';
 import { ordersApi, resolveImage } from '../../api/client';
 import FluentEmoji from '../../components/FluentEmoji';
 import { MyIdBadge } from '../../components/MyIdCard';
+import { generateTransitLabelPdf } from '../../utils/transitLabel';
 
 // "pickup_send" — virtual tab: pending + confirmed buyurtmalar (kelgan,
 // hali punktga yetib bormagan). Backend bittadan statusni qabul qiladi,
 // shuning uchun client'da ikkita so'rovni birlashtiramiz.
 const STATUS_TABS = [
   { id: 'pickup_send', label: "Punktga jo'natish", color: 'blue' },
+  { id: 'dispatched', label: "Jo'natishga tayyor", color: 'indigo' },
   { id: 'ready', label: 'Punktda tayyor', color: 'green' },
   { id: 'delivered', label: 'Topshirilgan', color: 'gray' },
   { id: 'cancelled', label: 'Bekor qilingan', color: 'red' },
@@ -49,6 +51,8 @@ export default function AdminOrders() {
   // "Qabul qilish" bosilganda avtomatik qo'shiladi; sahifa reload bo'lsa
   // ro'yxat tozalanadi — kodlar yana yashiringan holatga qaytadi.
   const [revealedCodeIds, setRevealedCodeIds] = useState(() => new Set());
+  // PDF yorliq tayyorlanayotgan buyurtma id'si (tugma loading holati)
+  const [printingId, setPrintingId] = useState(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -56,14 +60,21 @@ export default function AdminOrders() {
     try {
       let list;
       if (activeTab === 'pickup_send') {
-        // pending + confirmed birlashtirilgan ko'rinish
+        // Faqat hali jo'natilmaganlar: pending + chop etilmagan confirmed.
+        // Chop etilgach buyurtma "Jo'natishga tayyor" tabiga o'tadi.
         const [pending, confirmed] = await Promise.all([
           ordersApi.list({ status: 'pending' }),
           ordersApi.list({ status: 'confirmed' }),
         ]);
-        list = [...pending, ...confirmed].sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-        );
+        list = [...pending, ...confirmed]
+          .filter((o) => !o.dispatchedAt)
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      } else if (activeTab === 'dispatched') {
+        // Chop etilgan (yorliq bosilgan) buyurtmalar — punkt qabul qilguncha shu yerda.
+        const confirmed = await ordersApi.list({ status: 'confirmed' });
+        list = confirmed
+          .filter((o) => o.dispatchedAt)
+          .sort((a, b) => new Date(b.dispatchedAt) - new Date(a.dispatchedAt));
       } else {
         list = await ordersApi.list({ status: activeTab });
       }
@@ -101,6 +112,26 @@ export default function AdminOrders() {
       next.add(id);
       return next;
     });
+  };
+
+  // Chop etish: QR+kod joylashgan PDF yorliqni yuklab oladi VA buyurtmani "jo'natildi"
+  // deb belgilaydi (doimiy). So'ng ro'yxat yangilanadi — kartochka hira bo'ladi.
+  const handlePrint = async (order) => {
+    setPrintingId(order.id);
+    try {
+      await generateTransitLabelPdf({
+        code: order.transitCode,
+        customerName: order.customerName || '',
+        pointName: order.pickupPointName?.uz || order.pickupPointName?.ru || '',
+        pointAddress: order.pickupPointAddress?.uz || order.pickupPointAddress?.ru || '',
+      });
+      await ordersApi.dispatch(order.id);
+      await refresh();
+    } catch (e) {
+      alert("Chop etishda xato: " + (e.message || ''));
+    } finally {
+      setPrintingId(null);
+    }
   };
 
   const openCancelForm = (id) => {
@@ -256,7 +287,7 @@ export default function AdminOrders() {
                   </span>
                 </div>
 
-                {order.status === 'confirmed' && order.transitCode && revealedCodeIds.has(order.id) && (
+                {order.status === 'confirmed' && order.transitCode && (revealedCodeIds.has(order.id) || order.dispatchedAt) && (
                   <div className="mt-3 p-3 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
                     <div className="text-xs text-blue-700 mb-1 font-medium flex items-center gap-1.5">
                       <FluentEmoji name="package" size={12} /> Mahsulot kodi (yorliq) — punktga jo'natish uchun:
@@ -264,9 +295,29 @@ export default function AdminOrders() {
                     <div className="font-mono text-2xl font-bold text-blue-900 tracking-[0.3em] text-center py-1">
                       {order.transitCode}
                     </div>
-                    <div className="text-[10px] text-blue-600 text-center">
-                      Bu kodni mahsulotga yopishtirib punktga yuboring
+                    <button
+                      onClick={() => handlePrint(order)}
+                      disabled={printingId === order.id}
+                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      <Printer className="w-4 h-4" />
+                      {printingId === order.id
+                        ? 'Tayyorlanmoqda...'
+                        : order.dispatchedAt ? 'Qayta chop etish (PDF)' : 'Chop etish (PDF)'}
+                    </button>
+                    <div className="text-[10px] text-blue-600 text-center mt-1">
+                      QR + kod joylashgan PDF yuklab olinadi — mahsulotga yopishtiring
                     </div>
+                  </div>
+                )}
+
+                {order.status === 'confirmed' && order.dispatchedAt && (
+                  <div className="mt-3 p-2.5 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-sm text-green-800">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    <span>
+                      Qabul qildi{order.dispatchedByName ? ` — ${order.dispatchedByName}` : ''}
+                      <span className="text-green-600 text-xs"> • {formatDate(order.dispatchedAt)}</span>
+                    </span>
                   </div>
                 )}
 
@@ -306,7 +357,7 @@ export default function AdminOrders() {
                     <div className="text-[11px] text-gray-500 text-center">
                       Punkt admin mahsulot kodini kiritmaguncha buyurtma shu yerda turadi
                     </div>
-                    {!revealedCodeIds.has(order.id) && order.transitCode && (
+                    {!revealedCodeIds.has(order.id) && !order.dispatchedAt && order.transitCode && (
                       <button
                         onClick={() => revealCode(order.id)}
                         className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-lg text-sm font-medium"

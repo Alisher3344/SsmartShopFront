@@ -9,6 +9,10 @@ import MIcon from './MIcon';
 import { MyIdBadge } from './MyIdCard';
 import { isMyIdVerified } from '../lib/myid';
 
+// Tashqi subdomenlar (Cloudflare tunnel orqali)
+const SSMART_TV_URL = 'https://tty0x.tv.ssmart.uz';            // Ssmart TV (IPTV+VOD)
+const SSMART_MASTER_URL = 'https://pro.ssmart.uz';       // Ustalar (pro/master paneli)
+
 // localStorage'dan joriy foydalanuvchini olish (subscriptionsiz, biroz primitiv)
 const useCurrentUser = () => {
   const [user, setUser] = useState(() => {
@@ -143,10 +147,10 @@ export default function Header() {
               e.stopPropagation();
               setMegaOpen((prev) => !prev);
             }}
-            className="hidden lg:flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors flex-shrink-0"
+            className="btn-primary hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold flex-shrink-0"
           >
             <MIcon name={megaOpen ? 'close' : 'menu'} size={18} />
-            <span className="text-sm">{t('nav.allCategories')}</span>
+            <span className="font-display text-[13px] tracking-tight">{t('nav.allCategories')}</span>
           </button>
 
           {/* Search */}
@@ -158,7 +162,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('nav.search')}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 focus:bg-white transition-colors text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50/80 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-400 focus:bg-white transition-all text-sm"
               />
             </div>
           </form>
@@ -289,18 +293,31 @@ export default function Header() {
             </Link>
           ))}
 
-          {/* "Ustalar" tugmasi — o'ng oxirida, 1.5x kattaroq, ko'zga tashlanadigan */}
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="group relative ml-auto flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-orange-300/50 whitespace-nowrap"
-          >
-            <MIcon name="construction" size={20} className="text-white" />
-            <span>{lang === 'ru' ? 'Мастера' : 'Ustalar'}</span>
-            <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none shadow-sm flex items-center justify-center">
-              ★
-            </span>
-          </button>
+          {/* "Ssmart TV" + "Ustalar" tugmalari — o'ng oxirida, kattaroq, ko'zga tashlanadigan */}
+          <div className="ml-auto flex items-center gap-3">
+            {/* Ssmart TV — ssmart-tv.ssmart.uz subdomeni */}
+            <a
+              href={SSMART_TV_URL}
+              className="btn-nav-cta btn-nav-tv group relative flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-violet-300/50 whitespace-nowrap"
+            >
+              <MIcon name="live_tv" size={20} className="text-white" />
+              <span>{t('nav.tv')}</span>
+              <span className="badge-live absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none shadow-sm">
+                LIVE
+              </span>
+            </a>
+            {/* Ustalar — ssmart-master.ssmart.uz (pro/master paneli) */}
+            <a
+              href={SSMART_MASTER_URL}
+              className="btn-nav-cta btn-nav-master group relative flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-orange-300/50 whitespace-nowrap"
+            >
+              <MIcon name="construction" size={20} className="text-white" />
+              <span>{t('nav.ustalar')}</span>
+              <span className="badge-star absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none shadow-sm flex items-center justify-center">
+                ★
+              </span>
+            </a>
+          </div>
         </nav>
       </div>
 
@@ -352,7 +369,7 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('nav.search')}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-400 text-sm"
                 />
               </div>
             </form>
@@ -372,6 +389,16 @@ export default function Header() {
                 <span>{t('nav.bu')}</span>
                 <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">NEW</span>
               </Link>
+              <a href={SSMART_TV_URL} className="relative px-3 py-2.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ring-1 ring-violet-300/40">
+                <MIcon name="live_tv" size={18} className="text-white" />
+                <span>{t('nav.tv')}</span>
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none">LIVE</span>
+              </a>
+              <a href={SSMART_MASTER_URL} className="relative px-3 py-2.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ring-1 ring-orange-300/40">
+                <MIcon name="construction" size={18} className="text-white" />
+                <span>{t('nav.ustalar')}</span>
+                <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none flex items-center justify-center">★</span>
+              </a>
               <Link to="/profile" className="px-3 py-2.5 bg-gray-50 rounded-lg text-sm font-medium flex items-center gap-1.5">
                 <img src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Bust%20in%20silhouette/3D/bust_in_silhouette_3d.png" alt="" className="w-5 h-5 object-contain" />
                 <span>{t('nav.profile')}</span>

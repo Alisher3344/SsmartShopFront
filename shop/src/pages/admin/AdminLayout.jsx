@@ -1,5 +1,5 @@
-import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom';
-import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon } from 'lucide-react';
+import { Outlet, NavLink, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon, Tv, Wrench, CreditCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../../context/AdminThemeContext';
@@ -9,6 +9,7 @@ function AdminLayoutInner() {
   const { user, logout, isAdmin, isSuperAdmin, loading } = useAuth();
   const { isDark, toggle } = useAdminTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Foydalanuvchi noto'g'ri subdomenda bo'lsa to'g'ri joyga yo'naltirish
@@ -45,27 +46,42 @@ function AdminLayoutInner() {
   };
 
   const role = user.role;
+  // Har bir element bir mahsulot bo'limiga tegishli ('shop' yoki 'tv').
+  // Switcher orqali tanlangan bo'lim elementlarigina ko'rinadi — aralashmaydi.
   const navItems = [
-    // Faqat superadmin
-    { to: '/', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'] },
-    // Mahsulotlar — barcha admin rollar (superadmin, sotuv admin, staff)
-    { to: '/products', label: 'Mahsulotlar', icon: Package, roles: ['superadmin', 'admin', 'staff'] },
-    { to: '/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['superadmin', 'admin', 'staff'] },
-    { to: '/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'] },
-    // Buyurtmalar — barcha admin rollar
-    { to: '/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['superadmin', 'admin', 'staff'] },
-    // Faqat staff (magazin admin) — o'z magazinining statistikasi
-    { to: '/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'] },
-    // Faqat superadmin
-    { to: '/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
-    { to: '/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
-    { to: '/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
-    { to: '/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
-    { to: '/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
-    { to: '/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'] },
+    // --- Ssmart Shop ---
+    { to: '/', label: 'Dashboard', icon: BarChart3, end: true, roles: ['superadmin'], product: 'shop' },
+    { to: '/products', label: 'Mahsulotlar', icon: Package, roles: ['superadmin', 'admin', 'staff'], product: 'shop' },
+    { to: '/low-stock', label: 'Kam qolgan', icon: AlertTriangle, roles: ['superadmin', 'admin', 'staff'], product: 'shop' },
+    { to: '/banners', label: 'Reklama bannerlar', icon: ImageIcon, roles: ['superadmin'], product: 'shop' },
+    { to: '/orders', label: 'Buyurtmalar', icon: ClipboardList, roles: ['superadmin', 'admin', 'staff'], product: 'shop' },
+    { to: '/my-stats', label: 'Statistika', icon: BarChart3, roles: ['staff'], product: 'shop' },
+    { to: '/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'], product: 'shop' },
+    { to: '/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'], product: 'shop' },
+    { to: '/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'], product: 'shop' },
+    { to: '/instalments', label: 'Rassrochka (Atmos)', icon: CreditCard, roles: ['superadmin'], product: 'shop' },
+    { to: '/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'], product: 'shop' },
+    { to: '/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'], product: 'shop' },
+    { to: '/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'], product: 'shop' },
+    // --- Ssmart TV ---
+    { to: '/tv-admins', label: 'Ssmart TV adminlari', icon: Tv, roles: ['superadmin'], product: 'tv' },
+    { to: '/tv-carousel', label: 'Reklama Bannerlari', icon: ImageIcon, roles: ['superadmin'], product: 'tv' },
+    // --- Ssmart Pro ---
+    { to: '/pro-carousel', label: 'Reklama Karusel', icon: ImageIcon, roles: ['superadmin'], product: 'pro' },
   ];
 
-  const visibleNav = navItems.filter(item => item.roles.includes(role));
+  // Har bir bo'limning yo'llari — shu yo'llarda bo'lsak mos rejim faollashadi.
+  const TV_PATHS = ['/tv-admins', '/tv-carousel'];
+  const PRO_PATHS = ['/pro-carousel'];
+  const activeProduct = PRO_PATHS.some(p => location.pathname.startsWith(p))
+    ? 'pro'
+    : TV_PATHS.some(p => location.pathname.startsWith(p))
+    ? 'tv'
+    : 'shop';
+
+  const visibleNav = navItems.filter(
+    item => item.roles.includes(role) && item.product === activeProduct
+  );
 
   const linkClass = ({ isActive }) =>
     `group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
@@ -116,6 +132,45 @@ function AdminLayoutInner() {
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Mahsulot switcher — logo ostida, ko'zga tashlanadigan segment-control.
+            Tanlangan bo'lim menyuni filterlaydi (Shop/TV alohida). */}
+        {isSuperAdmin && (
+          <div className="px-3 pt-3 pb-1">
+            <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-gray-100 rounded-2xl">
+              {[
+                { key: 'shop', label: 'Shop', icon: StoreIcon, to: '/' },
+                { key: 'tv', label: 'TV', icon: Tv, to: '/tv-admins' },
+                { key: 'pro', label: 'Pro', icon: Wrench, to: '/pro-carousel' },
+              ].map((p) => {
+                const active = activeProduct === p.key;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    disabled={p.disabled}
+                    title={p.disabled ? 'Ssmart Pro — tez kunda' : `Ssmart ${p.label}`}
+                    onClick={() => {
+                      if (p.disabled) return;
+                      navigate(p.to);
+                      setSidebarOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-[11px] font-bold transition-all duration-200 ${
+                      active
+                        ? 'bg-gradient-to-br from-primary-600 to-primary-700 text-white shadow-md scale-[1.03]'
+                        : p.disabled
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'text-gray-500 hover:text-primary-700 hover:bg-white'
+                    }`}
+                  >
+                    <p.icon className="w-[18px] h-[18px]" />
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
