@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useShop } from '../context/ShopContext';
+import { flyToCart } from '../lib/uxBus';
 import { useAuthGate } from '../context/AuthGateContext';
 import { formatPrice, calculateMonthly, findSubcategoryById } from '../data/products';
 import { getBadgeById } from '../data/badges';
@@ -20,9 +22,16 @@ export default function ProductCard({ product, variant = 'home' }) {
   const { t, i18n } = useTranslation();
   const { addToCart, isInCart, toggleFavorite, isFavorite } = useShop();
   const { requireAuth } = useAuthGate();
+  const imgRef = useRef(null);
 
   const handleAddToCart = () => {
-    requireAuth(() => addToCart(product));
+    requireAuth(() => {
+      // Rasmni savatga "uchirish" — addToCart'dan oldin pozitsiyani olamiz
+      if (imgRef.current) {
+        flyToCart(imgRef.current.getBoundingClientRect(), imgRef.current.currentSrc || product.image);
+      }
+      addToCart(product);
+    });
   };
 
   const lang = i18n.language;
@@ -45,11 +54,12 @@ export default function ProductCard({ product, variant = 'home' }) {
   const cfg = CARD_VARIANTS[variant] || CARD_VARIANTS.home;
 
   return (
-    <div className={`card group overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full w-full ${cfg.maxW} mx-auto`}>
+    <div className={`card group overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col h-full w-full ${cfg.maxW} mx-auto`}>
       {/* Image */}
       <div className="relative aspect-[3/4] bg-gray-50 overflow-hidden flex-shrink-0">
         <Link to={`/product/${product.id}`} className="block w-full h-full">
           <img
+            ref={imgRef}
             src={product.image}
             alt={product.name[lang]}
             loading="lazy"
@@ -92,14 +102,14 @@ export default function ProductCard({ product, variant = 'home' }) {
 
         <button
           onClick={() => toggleFavorite(product)}
-          className="absolute top-2 right-2 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center hover:bg-white transition-colors shadow-sm z-10"
+          className="absolute top-2 right-2 w-9 h-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center hover:bg-white hover:scale-110 active:scale-90 transition-all shadow-sm z-10"
           aria-label="Favorite"
         >
           <MIcon
             name="favorite"
             size={18}
             fill={fav}
-            className={fav ? 'text-red-500' : 'text-gray-600'}
+            className={`transition-all ${fav ? 'text-red-500 scale-110' : 'text-gray-600'}`}
           />
         </button>
       </div>
@@ -154,6 +164,7 @@ export default function ProductCard({ product, variant = 'home' }) {
         <button
           onClick={handleAddToCart}
           disabled={inCart}
+          data-ripple={inCart ? undefined : ''}
           className={`mt-auto w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
             inCart
               ? 'bg-green-50 text-green-700 border border-green-200'

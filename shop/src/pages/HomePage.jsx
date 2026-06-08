@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProductCard from '../components/ProductCard';
 import PromoCarousel from '../components/PromoCarousel';
+import Reveal from '../components/Reveal';
 import { useAdminData } from '../context/AdminDataContext';
 import { shuffleBySubcategory } from '../utils/productShuffle';
 import MIcon from '../components/MIcon';
@@ -61,7 +62,7 @@ export default function HomePage() {
 
       {/* Features */}
       <section className="container-custom py-8 md:py-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Reveal group className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {features.map((feature, idx) => (
             <div key={idx} className="card p-3 md:p-4 flex items-start gap-3">
               <div className="w-9 h-9 md:w-10 md:h-10 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -75,7 +76,7 @@ export default function HomePage() {
               </div>
             </div>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* Loading spinner — mahsulot bo'limlari o'rniga ko'rsatiladi */}
@@ -94,11 +95,11 @@ export default function HomePage() {
               {t('products.details')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
+          <Reveal group className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {popularProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </Reveal>
         </section>
       )}
 
@@ -113,11 +114,11 @@ export default function HomePage() {
               {t('common.showAll')} <MIcon name="arrow_forward" size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
+          <Reveal group className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {discountProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </Reveal>
         </section>
       )}
 
@@ -125,16 +126,17 @@ export default function HomePage() {
           (ommabop/chegirmali bo'limda bo'lganlari chiqarilmaydi) */}
       {otherProducts.length > 0 && (
         <section className="container-custom py-10">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
+          <Reveal group className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 2xl:gap-6">
             {otherProducts.slice(0, visibleCount).map(product => (
               <ProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </Reveal>
           {visibleCount < otherProducts.length && (
             <div className="flex justify-center mt-8">
               <button
                 type="button"
                 onClick={() => setVisibleCount((c) => c + STEP)}
+                data-ripple="dark"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-primary-600 text-primary-600 font-semibold rounded-full hover:bg-primary-600 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 {lang === 'ru' ? 'Показать ещё' : "Yana ko'rish"}

@@ -413,20 +413,12 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             <form onSubmit={phoneLogin} className="space-y-4">
               <PhoneField value={phoneDigits} onChange={handlePhoneChange} />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    placeholder="Parolni kiriting"
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="Parolni kiriting"
+              />
 
               <ErrorBox text={error} action={errorAction} />
 
@@ -527,21 +519,13 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             </p>
 
             <form onSubmit={savePassword} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    placeholder="Yangi parol"
-                    autoFocus
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Yangi parol"
+                autoFocus
+              />
 
               {/* Parol talablari ko'rsatkichlari */}
               <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
@@ -711,21 +695,14 @@ export default function LoginModal({ open, onClose, onSuccess }) {
             </p>
 
             <form onSubmit={completeReset} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Yangi parol</label>
-                <div className="relative">
-                  <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    placeholder="Yangi parol"
-                    autoFocus
-                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
-                  />
-                </div>
-              </div>
+              <PasswordField
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                placeholder="Yangi parol"
+                autoFocus
+                label="Yangi parol"
+              />
 
               <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
                 <PwdHint ok={pwdChecks.length}>Kamida 6 belgi</PwdHint>
@@ -780,6 +757,77 @@ function PhoneField({ value, onChange }) {
           autoFocus
           className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base font-medium tracking-wide"
         />
+      </div>
+    </div>
+  );
+}
+
+// Parol kiritish maydoni — o'ng tomonda animatsiyali "ko'z" toggle.
+// Yopiq: ko'z ustidan chiziq, qorachiq xira. Ochiq: chiziq yo'qoladi,
+// qorachiq parol uzunligiga qarab chap-o'ngga "skan" qiladi (huddi o'qiyotgandek),
+// bosilganda pirpiraydi. Animatsiya CSS'da (.eye-toggle), iris harakati JS rAF'da.
+function PasswordField({ value, onChange, placeholder, autoComplete, autoFocus = false, label = 'Parol' }) {
+  const [show, setShow] = useState(false);
+  const irisRef = useRef(null);
+  const targetX = useRef(0);
+  const curX = useRef(0);
+
+  // Ochiq holatda qorachiq parol uzunligiga qarab chap-o'ngga suriladi (skan effekti)
+  useEffect(() => {
+    if (!show) { targetX.current = 0; return; }
+    const span = 2.6; // SVG user units
+    targetX.current = ((value.length % 8) / 7) * (span * 2) - span;
+  }, [value, show]);
+
+  // rAF lerp — har kadrda qorachiqni nishonga silliq yaqinlashtiramiz
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      curX.current += (targetX.current - curX.current) * 0.18;
+      if (irisRef.current) {
+        irisRef.current.setAttribute('transform', `translate(${curX.current.toFixed(2)} 0)`);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+      <div className="relative">
+        <Lock className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <input
+          type={show ? 'text' : 'password'}
+          value={value}
+          onChange={onChange}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary-500 focus:bg-white text-base"
+        />
+        <button
+          type="button"
+          onClick={() => setShow((s) => !s)}
+          className={`eye-toggle absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 ${show ? 'is-open' : ''}`}
+          aria-label={show ? "Parolni yashirish" : "Parolni ko'rsatish"}
+          aria-pressed={show}
+          tabIndex={-1}
+        >
+          <svg
+            className="eye-svg"
+            width="22" height="22" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2"
+            strokeLinecap="round" strokeLinejoin="round"
+          >
+            <path className="eye-lid" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+            <g className="eye-iris" ref={irisRef}>
+              <circle cx="12" cy="12" r="3" />
+            </g>
+            <line className="eye-slash" x1="4" y1="20" x2="20" y2="4" />
+          </svg>
+        </button>
       </div>
     </div>
   );

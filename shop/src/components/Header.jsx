@@ -56,6 +56,39 @@ export default function Header() {
   const megaRef = useRef(null);
   const megaBtnRef = useRef(null);
 
+  // Scroll holati — pastga skroll qilinganda headerga kuchli soya
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Badge "bump" — savat/sevimli soni oshganda ikonka sakraydi
+  const [cartPop, setCartPop] = useState(false);
+  const [favPop, setFavPop] = useState(false);
+  const prevCart = useRef(cartCount);
+  const prevFav = useRef(favorites.length);
+  useEffect(() => {
+    if (cartCount > prevCart.current) {
+      setCartPop(true);
+      const id = setTimeout(() => setCartPop(false), 480);
+      prevCart.current = cartCount;
+      return () => clearTimeout(id);
+    }
+    prevCart.current = cartCount;
+  }, [cartCount]);
+  useEffect(() => {
+    if (favorites.length > prevFav.current) {
+      setFavPop(true);
+      const id = setTimeout(() => setFavPop(false), 480);
+      prevFav.current = favorites.length;
+      return () => clearTimeout(id);
+    }
+    prevFav.current = favorites.length;
+  }, [favorites.length]);
+
   const handleProfileClick = (e) => {
     e.preventDefault();
     if (currentUser) {
@@ -102,7 +135,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <header className={`shop-header sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm ${scrolled ? 'is-scrolled' : ''}`}>
       {/* Top thin bar - desktop only */}
       <div className="hidden md:block bg-gray-50 border-b border-gray-100 text-xs">
         <div className="container-custom flex items-center justify-between h-8">
@@ -185,19 +218,19 @@ export default function Header() {
               </button>
             </div>
 
-            <Link to="/favorites" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label={t('nav.favorites')}>
+            <Link to="/favorites" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors hover:scale-110 active:scale-95" aria-label={t('nav.favorites')}>
               <MIcon name="favorite" size={22} className="text-gray-700" />
               {favorites.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                <span className={`absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium ${favPop ? 'badge-bump' : ''}`}>
                   {favorites.length}
                 </span>
               )}
             </Link>
 
-            <Link to="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label={t('nav.cart')}>
+            <Link to="/cart" data-cart-target className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors hover:scale-110 active:scale-95" aria-label={t('nav.cart')}>
               <MIcon name="shopping_cart" size={22} className="text-gray-700" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-primary-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                <span className={`absolute -top-0.5 -right-0.5 bg-primary-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium ${cartPop ? 'badge-bump' : ''}`}>
                   {cartCount}
                 </span>
               )}
@@ -289,18 +322,31 @@ export default function Header() {
             </Link>
           ))}
 
-          {/* "Ustalar" tugmasi — o'ng oxirida, 1.5x kattaroq, ko'zga tashlanadigan */}
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="group relative ml-auto flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-orange-300/50 whitespace-nowrap"
-          >
-            <MIcon name="construction" size={20} className="text-white" />
-            <span>{lang === 'ru' ? 'Мастера' : 'Ustalar'}</span>
-            <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none shadow-sm flex items-center justify-center">
-              ★
-            </span>
-          </button>
+          {/* "Ssmart TV" + "Ustalar" tugmalari — o'ng oxirida, ko'zga tashlanadigan */}
+          <div className="ml-auto flex items-center gap-3">
+            {/* Ssmart TV — tty0x-tv.ssmart.uz (IPTV+VOD) */}
+            <a
+              href="https://tty0x-tv.ssmart.uz"
+              className="btn-nav-cta btn-nav-tv group relative flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-violet-300/50 whitespace-nowrap"
+            >
+              <MIcon name="live_tv" size={20} className="text-white" />
+              <span>Ssmart TV</span>
+              <span className="badge-live absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none shadow-sm">
+                LIVE
+              </span>
+            </a>
+            {/* Ustalar tugmasi — pro.ssmart.uz (Ustalar platformasi) */}
+            <a
+              href="https://pro.ssmart.uz/"
+              className="btn-nav-cta btn-nav-master group relative flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-orange-300/50 whitespace-nowrap"
+            >
+              <MIcon name="construction" size={20} className="text-white" />
+              <span>{lang === 'ru' ? 'Мастера' : 'Ustalar'}</span>
+              <span className="absolute -top-1.5 -right-1.5 bg-yellow-300 text-orange-700 text-[10px] font-extrabold w-5 h-5 rounded-full leading-none shadow-sm flex items-center justify-center">
+                ★
+              </span>
+            </a>
+          </div>
         </nav>
       </div>
 

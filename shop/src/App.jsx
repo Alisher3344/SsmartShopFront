@@ -6,6 +6,8 @@ import { AuthGateProvider } from './context/AuthGateContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MobileBottomNav from './components/MobileBottomNav';
+import PageTransition from './components/PageTransition';
+import UxEffects from './components/UxEffects';
 import HomePage from './pages/HomePage';
 import BUPage from './pages/BUPage';
 import CatalogPage from './pages/CatalogPage';
@@ -29,6 +31,7 @@ import AdminOrders from './pages/admin/AdminOrders';
 import AdminLowStock from './pages/admin/AdminLowStock';
 import AdminPopular from './pages/admin/AdminPopular';
 import AdminStores from './pages/admin/AdminStores';
+import AdminInstalments from './pages/admin/AdminInstalments';
 import AdminStaffStats from './pages/admin/AdminStaffStats';
 import AdminUsers from './pages/admin/AdminUsers';
 
@@ -43,11 +46,12 @@ const isAdminHost = typeof window !== 'undefined'
 // Sayt qatlami (header + footer bilan)
 function PublicLayout({ children }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="shop-shell min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1"><PageTransition>{children}</PageTransition></main>
       <Footer />
       <MobileBottomNav />
+      <UxEffects />
     </div>
   );
 }
@@ -67,6 +71,7 @@ function AdminRoutes() {
         <Route path="low-stock" element={<AdminLowStock />} />
         <Route path="popular" element={<AdminPopular />} />
         <Route path="stores" element={<AdminStores />} />
+        <Route path="instalments" element={<AdminInstalments />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="my-stats" element={<AdminStaffStats />} />
       </Route>

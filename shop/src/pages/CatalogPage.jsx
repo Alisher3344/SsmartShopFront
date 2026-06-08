@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, SlidersHorizontal, ChevronRight, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import Reveal from '../components/Reveal';
 import FluentEmoji from '../components/FluentEmoji';
 import { findCategoryById, findSubcategoryById } from '../data/products';
 import { USED_GRADE_STYLES } from '../data/usedGradeStyles';
@@ -332,11 +333,11 @@ export default function CatalogPage() {
               <p className="text-sm">{t('products.notFoundDesc')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
+            <Reveal group className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 justify-items-center">
               {filtered.map(product => (
                 <ProductCard key={product.id} product={product} variant="catalog" />
               ))}
-            </div>
+            </Reveal>
           )}
         </div>
       </div>

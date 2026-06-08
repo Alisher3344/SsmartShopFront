@@ -37,6 +37,10 @@ export const ShopProvider = ({ children }) => {
     localStorage.setItem('ssmart_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
+  // Toast yordamchisi — UxEffects qatlami window hodisasini tinglaydi
+  const toast = (text, icon) =>
+    window.dispatchEvent(new CustomEvent('ssmart:toast', { detail: { text, icon } }));
+
   // Cart funksiyalari
   const addToCart = (product) => {
     setCart(prev => {
@@ -48,6 +52,7 @@ export const ShopProvider = ({ children }) => {
       }
       return [...prev, { ...product, qty: 1 }];
     });
+    toast("Savatga qo'shildi", 'shopping_cart');
   };
 
   const removeFromCart = (id) => {
@@ -75,11 +80,15 @@ export const ShopProvider = ({ children }) => {
 
   // Favorites funksiyalari
   const toggleFavorite = (product) => {
+    const exists = favorites.some(item => item.id === product.id);
     setFavorites(prev => {
-      const exists = prev.find(item => item.id === product.id);
-      if (exists) return prev.filter(item => item.id !== product.id);
+      if (prev.some(item => item.id === product.id)) {
+        return prev.filter(item => item.id !== product.id);
+      }
       return [...prev, product];
     });
+    toast(exists ? 'Sevimlilardan olib tashlandi' : "Sevimlilarga qo'shildi",
+          exists ? 'heart_broken' : 'favorite');
   };
 
   const isFavorite = (id) => favorites.some(item => item.id === id);
