@@ -192,6 +192,8 @@ export const ordersApi = {
     return request(`/orders${s ? '?' + s : ''}`);
   },
   confirm: (id) => request(`/orders/${id}/confirm`, { method: 'POST' }),
+  // Mahsulot kodi (yorliq) chop etilib punktga jo'natildi — doimiy belgi (hira holat)
+  dispatch: (id) => request(`/orders/${id}/dispatch`, { method: 'POST' }),
   cancel: (id, reason) =>
     request(`/orders/${id}/cancel`, {
       method: 'POST',
@@ -215,6 +217,30 @@ export const staffApi = {
   delete: (id) => request(`/staff/${id}`, { method: 'DELETE' }),
 };
 
+// ===== SSMART TV ADMINLARI (faqat superadmin; TV backendiga proxy) =====
+export const tvAdminsApi = {
+  list: () => request('/tv/admins'),
+  create: (data) => request('/tv/admins', { method: 'POST', body: data }),
+  update: (id, data) => request(`/tv/admins/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/tv/admins/${id}`, { method: 'DELETE' }),
+};
+
+// ===== SSMART TV BOSH SAHIFA KARUSELI (faqat superadmin; TV backendiga proxy) =====
+export const tvCarouselApi = {
+  list: () => request('/tv/carousel'),
+  create: (data) => request('/tv/carousel', { method: 'POST', body: data }),
+  update: (id, data) => request(`/tv/carousel/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/tv/carousel/${id}`, { method: 'DELETE' }),
+};
+
+// ===== SSMART PRO (pro.ssmart.uz) REKLAMA KARUSELI (faqat superadmin; Pro backendiga proxy) =====
+export const proCarouselApi = {
+  list: () => request('/pro/carousel'),
+  create: (data) => request('/pro/carousel', { method: 'POST', body: data }),
+  update: (id, data) => request(`/pro/carousel/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/pro/carousel/${id}`, { method: 'DELETE' }),
+};
+
 // ===== ADMIN USERS (faqat superadmin) =====
 export const adminUsersApi = {
   list: (search) => {
@@ -224,6 +250,25 @@ export const adminUsersApi = {
   get: (id) => request(`/admin/users/${id}`),
   update: (id, data) => request(`/admin/users/${id}`, { method: 'PUT', body: data }),
   delete: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
+};
+
+// ===== RASSROCHKA / ATMOS (faqat admin) =====
+export const instalmentApi = {
+  // Atmos store bo'yicha to'lov tranzaksiyalari (filtr: sana, loan_id, payment_id, pagination)
+  transactions: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.storeId != null) qs.set('store_id', params.storeId);
+    if (params.dateFrom) qs.set('date_from', params.dateFrom);
+    if (params.dateTo) qs.set('date_to', params.dateTo);
+    if (params.page != null) qs.set('page', params.page);
+    if (params.size != null) qs.set('size', params.size);
+    if (params.loanId != null && params.loanId !== '') qs.set('loan_id', params.loanId);
+    if (params.paymentId != null && params.paymentId !== '') qs.set('payment_id', params.paymentId);
+    return request(`/admin/instalment/transactions?${qs.toString()}`);
+  },
+  // Atmos store + rassrochka id bo'yicha bitta rassrochka (raw Atmos javobi)
+  getByPaymo: (storeId, instalmentId) =>
+    request(`/admin/instalment/by-paymo/${storeId}/${instalmentId}`),
 };
 
 // ===== UPLOAD =====
