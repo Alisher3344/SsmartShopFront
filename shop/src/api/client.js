@@ -215,6 +215,30 @@ export const staffApi = {
   delete: (id) => request(`/staff/${id}`, { method: 'DELETE' }),
 };
 
+// ===== SSMART TV ADMINLARI (faqat superadmin; TV backendiga proxy) =====
+export const tvAdminsApi = {
+  list: () => request('/tv/admins'),
+  create: (data) => request('/tv/admins', { method: 'POST', body: data }),
+  update: (id, data) => request(`/tv/admins/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/tv/admins/${id}`, { method: 'DELETE' }),
+};
+
+// ===== SSMART TV BOSH SAHIFA KARUSELI (faqat superadmin; TV backendiga proxy) =====
+export const tvCarouselApi = {
+  list: () => request('/tv/carousel'),
+  create: (data) => request('/tv/carousel', { method: 'POST', body: data }),
+  update: (id, data) => request(`/tv/carousel/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/tv/carousel/${id}`, { method: 'DELETE' }),
+};
+
+// ===== SSMART PRO (pro.ssmart.uz) REKLAMA KARUSELI (faqat superadmin; Pro backendiga proxy) =====
+export const proCarouselApi = {
+  list: () => request('/pro/carousel'),
+  create: (data) => request('/pro/carousel', { method: 'POST', body: data }),
+  update: (id, data) => request(`/pro/carousel/${id}`, { method: 'PUT', body: data }),
+  delete: (id) => request(`/pro/carousel/${id}`, { method: 'DELETE' }),
+};
+
 // ===== ADMIN USERS (faqat superadmin) =====
 export const adminUsersApi = {
   list: (search) => {

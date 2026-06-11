@@ -34,6 +34,9 @@ import AdminStores from './pages/admin/AdminStores';
 import AdminInstalments from './pages/admin/AdminInstalments';
 import AdminStaffStats from './pages/admin/AdminStaffStats';
 import AdminUsers from './pages/admin/AdminUsers';
+import AdminTvAdmins from './pages/admin/AdminTvAdmins';
+import AdminTvCarousel from './pages/admin/AdminTvCarousel';
+import AdminProCarousel from './pages/admin/AdminProCarousel';
 
 // Admin subdomenlar — shu hostnamelarda root URL admin paneliga olib boradi
 const ADMIN_HOSTS = new Set([
@@ -73,6 +76,9 @@ function AdminRoutes() {
         <Route path="stores" element={<AdminStores />} />
         <Route path="instalments" element={<AdminInstalments />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="tv-admins" element={<AdminTvAdmins />} />
+        <Route path="tv-carousel" element={<AdminTvCarousel />} />
+        <Route path="pro-carousel" element={<AdminProCarousel />} />
         <Route path="my-stats" element={<AdminStaffStats />} />
       </Route>
       <Route path="*" element={<NotFound />} />
