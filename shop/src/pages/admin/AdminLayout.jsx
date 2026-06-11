@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate, Navigate } from 'react-router-dom';
-import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon } from 'lucide-react';
+import { Package, Image as ImageIcon, LogOut, Tag, BarChart3, Home, Menu, X, MapPin, UserCog, ClipboardList, Sun, Moon, AlertTriangle, Star, Store as StoreIcon, Users as UsersIcon, CreditCard } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AdminThemeProvider, useAdminTheme } from '../../context/AdminThemeContext';
@@ -60,6 +60,7 @@ function AdminLayoutInner() {
     { to: '/sales', label: 'Aksiyalar', icon: Tag, roles: ['superadmin'] },
     { to: '/popular', label: 'Ommabop', icon: Star, roles: ['superadmin'] },
     { to: '/stores', label: 'Magazinlar', icon: StoreIcon, roles: ['superadmin'] },
+    { to: '/instalments', label: 'Rassrochka (Atmos)', icon: CreditCard, roles: ['superadmin'] },
     { to: '/pickup-points', label: 'Topshirish punktlari', icon: MapPin, roles: ['superadmin'] },
     { to: '/sales-admins', label: 'Sotuv Adminlari', icon: UserCog, roles: ['superadmin'] },
     { to: '/users', label: 'Foydalanuvchilar', icon: UsersIcon, roles: ['superadmin'] },

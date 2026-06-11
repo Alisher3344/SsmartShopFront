@@ -324,9 +324,9 @@ export default function Header() {
 
           {/* "Ssmart TV" + "Ustalar" tugmalari — o'ng oxirida, ko'zga tashlanadigan */}
           <div className="ml-auto flex items-center gap-3">
-            {/* Ssmart TV — tty0x-tv.ssmart.uz (IPTV+VOD) */}
+            {/* Ssmart TV — tv.ssmart.uz (IPTV+VOD) */}
             <a
-              href="https://tty0x-tv.ssmart.uz"
+              href="https://tv.ssmart.uz"
               className="btn-nav-cta btn-nav-tv group relative flex items-center gap-2 px-5 py-2.5 -my-2.5 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 ring-2 ring-violet-300/50 whitespace-nowrap"
             >
               <MIcon name="live_tv" size={20} className="text-white" />

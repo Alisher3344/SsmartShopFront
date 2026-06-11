@@ -27,9 +27,78 @@
 
     <!-- Title -->
     <title>SSMART - Onlayn do'kon</title>
+
+    <!-- App ochilish splash'i: butun sayt (window load) yuklanguncha turadi,
+         #root'dan TASHQARIDA — shuning uchun header ham, butun sayt ham yopiladi -->
+    <style>
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #ffffff;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        transition: opacity 0.45s ease;
+      }
+      #app-splash.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #app-splash .splash-logo {
+        width: 84px;
+        height: 84px;
+        object-fit: contain;
+      }
+      #app-splash .splash-spinner {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 3px solid #e5e7eb;
+        border-top-color: #2563eb;
+        animation: splashSpin 0.8s linear infinite;
+      }
+      @keyframes splashSpin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
+    <!-- Splash #root'dan tashqarida: React #root ichini almashtirsa ham bu o'chmaydi,
+         butun sayt + header ustida turadi -->
+    <div id="app-splash">
+      <img class="splash-logo" src="/logo.png" alt="SSMART" />
+      <div class="splash-spinner"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Splash'ni butun sayt yuklangach (window 'load') yopamiz.
+      // minShow — juda tez yuklanса miltillamasligi uchun; maxWait — hech qachon osilib qolmasligi uchun.
+      (function () {
+        var splash = document.getElementById('app-splash');
+        if (!splash) return;
+        var done = false;
+        var start = Date.now();
+        var minShow = 600;   // ms — kamida shuncha ko'rinadi
+        var maxWait = 12000; // ms — xavfsizlik chегaraси
+        function hide() {
+          if (done) return;
+          done = true;
+          splash.classList.add('is-hidden');
+          setTimeout(function () { if (splash && splash.parentNode) splash.parentNode.removeChild(splash); }, 500);
+        }
+        function onReady() {
+          var wait = Math.max(0, minShow - (Date.now() - start));
+          setTimeout(hide, wait);
+        }
+        if (document.readyState === 'complete') onReady();
+        else window.addEventListener('load', onReady);
+        setTimeout(hide, maxWait); // osilib qolishdan himoya
+      })();
+    </script>
   </body>
 </html>

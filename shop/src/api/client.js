@@ -226,6 +226,45 @@ export const adminUsersApi = {
   delete: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
 };
 
+// ===== INSTALMENT / RASSROCHKA (Atmos/Paymo, faqat superadmin) =====
+export const instalmentApi = {
+  // Rassrochkalar ro'yxati. params: { store_ids, page, size, status }
+  list: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.store_ids) qs.set('store_ids', params.store_ids);
+    if (params.page != null) qs.set('page', params.page);
+    if (params.size != null) qs.set('size', params.size);
+    if (params.status != null && params.status !== '') qs.set('status', params.status);
+    const s = qs.toString();
+    return request(`/admin/instalment/list${s ? '?' + s : ''}`);
+  },
+  // Bitta rassrochka (Atmos store + id bo'yicha) — detal: status, balance, file
+  getByPaymo: (storeId, instalmentId) =>
+    request(`/admin/instalment/by-paymo/${storeId}/${instalmentId}`),
+  // Yangi rassrochka ochish (order'siz, admin). Summalar TIYIN'da. Javob: {instalment_id, status,...}
+  create: (data) =>
+    request('/admin/instalment/create', { method: 'POST', body: data }),
+  // To'lov yozuvlari (moliyaviy hisobot). params: store_id, date_from, date_to, page, size, loan_id, payment_id
+  transactions: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.store_id != null) qs.set('store_id', params.store_id);
+    if (params.date_from) qs.set('date_from', params.date_from);
+    if (params.date_to) qs.set('date_to', params.date_to);
+    if (params.page != null) qs.set('page', params.page);
+    if (params.size != null) qs.set('size', params.size);
+    if (params.loan_id != null && params.loan_id !== '') qs.set('loan_id', params.loan_id);
+    if (params.payment_id != null && params.payment_id !== '') qs.set('payment_id', params.payment_id);
+    const s = qs.toString();
+    return request(`/admin/instalment/transactions${s ? '?' + s : ''}`);
+  },
+  // SMS-kod bilan tasdiqlash: { instalment_id, otp }
+  confirmBySms: (data) =>
+    request('/admin/instalment/confirm-by-sms', { method: 'PUT', body: data }),
+  // Asosiy kartani almashtirish: { instalment_id, card_id, store_id }
+  changeCard: (data) =>
+    request('/admin/instalment/change-card', { method: 'POST', body: data }),
+};
+
 // ===== UPLOAD =====
 export const uploadApi = {
   image: async (file) => {

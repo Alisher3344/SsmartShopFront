@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Plus, Pencil, Trash2, X, Save, Store as StoreIcon, Eye, EyeOff, KeyRound, User as UserIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Store as StoreIcon, Eye, EyeOff, KeyRound, User as UserIcon, CreditCard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminData } from '../../context/AdminDataContext';
 import { staffApi } from '../../api/client';
@@ -8,6 +8,8 @@ import FluentEmoji from '../../components/FluentEmoji';
 
 const EMPTY = {
   name: '', address: '', phone: '', description: '', active: true,
+  // Atmos/Paymo rassrochka store_id
+  paymo_store_id: '',
   // Bog'langan admin/staff
   full_name: '', username: '', password: '',
 };
@@ -58,6 +60,7 @@ export default function AdminStores() {
       phone: s.phone || '',
       description: s.description || '',
       active: s.active,
+      paymo_store_id: s.paymo_store_id ?? s.paymoStoreId ?? '',
       // Mavjud staffning ma'lumotlari
       full_name: staff?.full_name || '',
       username: staff?.username || '',
@@ -90,6 +93,10 @@ export default function AdminStores() {
         phone: form.phone || null,
         description: form.description || null,
         active: !!form.active,
+        paymo_store_id:
+          form.paymo_store_id === '' || form.paymo_store_id == null
+            ? null
+            : Number(form.paymo_store_id),
       };
       let storeId = editingId;
       if (editingId) {
@@ -221,6 +228,20 @@ export default function AdminStores() {
               );
             })()}
 
+            {/* Atmos rassrochka ulanishi */}
+            {(() => {
+              const pid = s.paymo_store_id ?? s.paymoStoreId;
+              return pid ? (
+                <div className="mb-2 px-3 py-1.5 bg-primary-50 rounded-lg text-xs text-primary-700 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5" /> Atmos rassrochka: <span className="font-mono font-bold">#{pid}</span>
+                </div>
+              ) : (
+                <div className="mb-2 px-3 py-1.5 bg-gray-50 rounded-lg text-xs text-gray-500 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5" /> Rassrochkaga ulanmagan
+                </div>
+              );
+            })()}
+
             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
               <span className="text-xs text-gray-500 flex items-center gap-1"><FluentEmoji name="package" size={12} /> {productsCount(s.id)} ta mahsulot</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
@@ -300,6 +321,22 @@ export default function AdminStores() {
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm resize-none"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-primary-600" />
+                  Atmos store_id (rassrochka)
+                </label>
+                <input
+                  type="number"
+                  value={form.paymo_store_id}
+                  onChange={(e) => setForm({ ...form, paymo_store_id: e.target.value })}
+                  placeholder="masalan: 257"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 text-sm font-mono"
+                />
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Atmos/Paymo'dagi magazin ID'si — rassrochka shu orqali ochiladi. Bo'sh = ulanmagan.
+                </p>
               </div>
               <label className="flex items-center gap-2 text-sm">
                 <input
