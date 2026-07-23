@@ -3,6 +3,7 @@ import {
   Plus, Pencil, Trash2, Search, Tag, X, Save, ListPlus, ChevronDown,
   Home, Zap, Snowflake, Sparkles, Tv, Shirt, ChefHat, Lightbulb,
   Smartphone, Laptop, Plug, Camera, Car, Hammer, Baby, Utensils, Headphones, Apple,
+  Gamepad2,
 } from 'lucide-react';
 import { useAdminData } from '../../context/AdminDataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -879,6 +880,7 @@ const CATEGORY_ICONS = {
   'kitchen-utensils': Utensils,
   'beauty-health': Sparkles,
   'gadgets': Headphones,
+  'gaming': Gamepad2,
   'used': Apple,
 };
 

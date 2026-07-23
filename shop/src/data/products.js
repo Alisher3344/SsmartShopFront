@@ -12,6 +12,8 @@ export const categories = [
       { id: 'washing', name: { uz: 'Kir yuvish mashinasi', ru: 'Стиральные машины' } },
       { id: 'stoves', name: { uz: 'Gaz va elektr plita', ru: 'Газовые и электрические плиты' } },
       { id: 'ovens', name: { uz: 'Pech (duxovka)', ru: 'Духовые шкафы' } },
+      { id: 'microwaves', name: { uz: "Mikroto'lqinli pech", ru: 'Микроволновки' } },
+      { id: 'range-hoods', name: { uz: "Oshxona vityajkasi (dudbo'ron)", ru: 'Кухонные вытяжки' } },
       { id: 'dishwashers', name: { uz: 'Idish yuvish mashinasi', ru: 'Посудомоечные машины' } },
       { id: 'freezers', name: { uz: 'Katta muzlatgich (freezer)', ru: 'Морозильные камеры' } },
       { id: 'water-heaters', name: { uz: 'Suv isitkich (bojler)', ru: 'Водонагреватели (бойлеры)' } },
@@ -42,6 +44,7 @@ export const categories = [
       { id: 'steam-cookers', name: { uz: "Bug'da pishirgich", ru: 'Пароварки' } },
       { id: 'milk-frothers', name: { uz: "Sut ko'pirtirgich", ru: 'Вспениватели молока' } },
       { id: 'electric-knives', name: { uz: 'Elektr pichoq', ru: 'Электроножи' } },
+      { id: 'water-coolers', name: { uz: 'Suv sovutgichi (kuller)', ru: 'Кулеры для воды' } },
     ],
   },
   {
@@ -297,6 +300,18 @@ export const categories = [
       { id: 'power-banks', name: { uz: 'Akkumulyatorlar (power bank)', ru: 'Аккумуляторы' } },
       { id: 'tablets', name: { uz: 'Planshetlar', ru: 'Планшеты' } },
       { id: 'smart-watches-gadgets', name: { uz: 'Smart-soatlar', ru: 'Смарт-часы' } },
+    ],
+  },
+  {
+    id: 'gaming',
+    icon: 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Video%20game/3D/video_game_3d.png',
+    name: { uz: 'Geymerlar uchun mahsulotlar', ru: 'Товары для геймеров' },
+    shortName: { uz: 'Geymerlar', ru: 'Геймерам' },
+    subcategories: [
+      { id: 'game-consoles', name: { uz: "O'yin pristavkalari", ru: 'Игровые приставки' } },
+      { id: 'gaming-mice', name: { uz: "O'yin sichqonchalari", ru: 'Игровые мыши' } },
+      { id: 'gaming-keyboards', name: { uz: "O'yin klaviaturalari", ru: 'Игровые клавиатуры' } },
+      { id: 'gaming-headsets', name: { uz: "O'yin uchun quloqchinlar", ru: 'Игровые наушники' } },
     ],
   },
   {
